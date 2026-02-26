@@ -45,11 +45,6 @@ Short, 2–4 sentence description of what this session focused on.
 - List non-obvious choices, trade-offs, or constraints that shaped the solution.
 - Include assumptions that might need revisiting later.
 
-## Next steps
-- Concrete follow-ups, TODOs, or open questions.
-- Reference user stories when applicable (e.g. US05, US10).
-```
-
 ## Content expectations
 
 - Be **concise and information-dense**; avoid fluff.

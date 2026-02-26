@@ -63,7 +63,7 @@ feat(garden): add basic garden CRUD
 - The log should:
   - Reference the commit hash and branch.
   - Summarize the scope of work, mapped to user stories.
-  - Capture key design decisions and remaining TODOs.
+  - Capture key design decision.
 
 ## Safety notes
 
