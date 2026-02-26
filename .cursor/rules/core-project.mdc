@@ -1,0 +1,44 @@
+---
+description: Core rules and session logging for the Automated Garden backend project
+alwaysApply: true
+---
+
+# Core Project Rules
+
+## Session logging
+
+- After each meaningful agentic work session, create a markdown summary file in `doc/`.
+- **Filename pattern**: `doc/YYYY-MM-DD-session-XXX.md`, where:
+  - `YYYY-MM-DD` is the current date.
+  - `XXX` is a three-digit sequence for that day starting from `001`.
+- Each session log must use the following structure:
+
+  ```markdown
+  # OMG - Open Modular Gardening – Session Log
+
+  - Date: YYYY-MM-DD
+  - Time: HH:MM (local)
+  - Related user stories: USxx, ...
+
+  ## Context
+  [Short description of what this session was about.]
+
+  ## What was done
+  [Bullet list of key changes and activities.]
+
+  ## Design decisions
+  [Non-trivial choices, trade-offs, or assumptions.]
+
+  ## Next steps
+  [Concrete follow-ups, TODOs, or open questions.]
+  ```
+
+- Focus on **intent, reasoning, and decisions**, not low-level code diffs.
+- Assume reviewers will read these logs to understand how Cursor was used during this case.
+
+## Coding and workflow guidelines
+
+- Favor small, focused changes that map clearly to user stories (US01–US22).
+- Keep documentation and comments concise and practical.
+- When the user explicitly asks to **finalize** or **commit** work, follow the dedicated finalize/commit skill rather than ad-hoc git commands.
+

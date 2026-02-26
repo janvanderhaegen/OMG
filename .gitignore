@@ -1,0 +1,43 @@
+# OS / editor
+*.DS_Store
+Thumbs.db
+Desktop.ini
+*.swp
+*.swo
+*.tmp
+.idea/
+.vscode/
+
+# .NET / ASP.NET / Aspire
+bin/
+obj/
+Debug/
+Release/
+x64/
+x86/
+publish/
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+TestResults/
+TestResult*/
+*.coverage
+*.coveragexml
+*.vsp
+*.vspx
+
+# Docker / environment
+.env
+.env.*
+
+# Node / tooling (defensive)
+node_modules/
+dist/
+build/
+
+# Project notes
+# - Keep .cursor/rules and .cursor/skills tracked so reviewers see Cursor config.
+# - Keep doc/ tracked so all agentic session logs are included in the case.
+
