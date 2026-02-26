@@ -1,0 +1,26 @@
+---
+description: Architecture and DDD rules for the OMG backend
+alwaysApply: true
+---
+
+# Architecture & DDD Rules
+
+- **Layering**
+  - Follow the `Domain → Application → Infrastructure → Api` dependency direction described in `ARCHITECTURE.md`.
+  - Do not introduce circular dependencies or allow Api to depend directly on Infrastructure types.
+
+- **Domain design**
+  - Represent core concepts (Garden, Plant, HumidityTarget, IrrigationEvent, etc.) as aggregates and value objects with clear invariants.
+  - Keep domain types free from web, database, and framework concerns where possible.
+  - Prefer expressive methods on aggregates/value objects over anemic data models.
+
+- **Application layer**
+  - Implement use-cases as application services/handlers that orchestrate domain logic and persistence abstractions.
+  - Do not place domain rules directly in minimal API handlers or infrastructure classes.
+
+- **Infrastructure layer**
+  - Implement repositories, EF Core DbContext, and external integrations here.
+  - Map between persistence entities and domain types without leaking EF types into Domain or Api.
+
+When adding or refactoring functionality, prefer small, incremental changes that preserve these boundaries and keep business rules centered in the Domain layer.
+

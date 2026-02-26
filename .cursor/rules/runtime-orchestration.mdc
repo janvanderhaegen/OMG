@@ -1,0 +1,27 @@
+---
+description: Docker, docker-compose, and .NET Aspire conventions for the OMG backend
+alwaysApply: true
+---
+
+# Runtime Orchestration (Docker & Aspire)
+
+- **General approach**
+  - Treat containerized and orchestrated environments as the primary way to run the backend locally.
+  - Phase 1: Dockerfile + `docker-compose` for the API and backing services.
+  - Phase 2: .NET Aspire project to orchestrate the API, database, and any background workers or simulators.
+
+- **Docker**
+  - Use multi-stage builds to keep runtime images small.
+  - Configure the container to run the ASP.NET minimal API project targeting `net10.0`.
+  - Prefer configuration via environment variables and avoid hard-coding secrets.
+
+- **docker-compose**
+  - Define services for the API and its primary database.
+  - Use reasonable defaults for ports and volumes suitable for local development.
+
+- **.NET Aspire**
+  - Introduce an Aspire AppHost project to orchestrate the API, database, and any additional components.
+  - Keep environment configuration consistent between Aspire and plain Docker/docker-compose setups.
+
+When adding or modifying runtime configuration, prefer small, incremental changes that keep these phases clear and maintain parity between local and eventual CI environments.
+

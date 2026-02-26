@@ -14,7 +14,22 @@ This project is developed using the assistance of Cursor AI agents.
 
 ## Architecture
 
-The detailed architecture (layers, modules, and data flow) will be documented here as implementation progresses.
+This backend will be a **C#/.NET 10** service built on **ASP.NET Core minimal APIs**, following a lightweight, domain-driven modular-monolith design.
+
+- **Runtime & framework**
+  - Target framework: `net10.0` for all production and test projects.
+  - Hosting model: ASP.NET Core **minimal API** with endpoint groups, typed results, and clear separation between HTTP concerns and domain logic.
+- **High-level layers**
+  - `Domain`: core aggregates and value objects (e.g., Garden, Plant, HumidityTarget, IrrigationEvent) plus domain services and invariants.
+  - `Application`: use-cases and orchestration (e.g., garden CRUD, surface area validation, irrigation simulation), orchestrating domain operations.
+  - `Infrastructure`: persistence, external services, and cross-cutting concerns (e.g., EF Core, database, messaging).
+  - `Api`: minimal API endpoints, input validation, mapping to/from DTOs, and error handling.
+- **Boundaries**
+  - Domain does **not** depend on Application, Infrastructure, or Api.
+  - Application depends on Domain and abstractions from Infrastructure (e.g., repositories, unit of work) but not concrete persistence types.
+  - Api depends on Application and DTOs, but never directly on Infrastructure types.
+
+For more detail, see `ARCHITECTURE.md`, which documents the target project layout, dependency rules, and example data flows.
 
 ## User stories (execution-flow order)
 
@@ -86,5 +101,10 @@ As a developer, I can identify performance-critical endpoints and apply reasonab
 
 ## Getting started
 
-Implementation, run instructions, Docker configuration, and Aspire setup will be added as the project is developed.
+Implementation, run instructions, Docker configuration, and .NET Aspire setup will be added as the project is developed. All new backend code should:
+
+- Target **.NET 10** (`net10.0`).
+- Use **ASP.NET Core minimal APIs** for HTTP endpoints.
+- Respect the **Domain → Application → Infrastructure → Api** layering described above.
+
 

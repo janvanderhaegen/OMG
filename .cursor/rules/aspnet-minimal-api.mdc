@@ -1,0 +1,28 @@
+---
+description: ASP.NET Core minimal API conventions for the OMG backend
+alwaysApply: true
+---
+
+# ASP.NET Minimal API & REST Rules
+
+- **Endpoint style**
+  - Use ASP.NET Core minimal APIs for all HTTP endpoints.
+  - Group related endpoints (e.g., gardens, plants, health) in clearly named extension methods or route groups.
+
+- **Routing**
+  - Use resource-oriented routes such as `/api/gardens`, `/api/gardens/{gardenId}/plants`, `/api/plants/{plantId}`.
+  - Provide a `/api/health` endpoint for basic health checks.
+
+- **Responsibilities**
+  - Keep endpoint handlers thin:
+    - Validate and parse input.
+    - Call application-layer use-cases.
+    - Map domain results to DTOs and HTTP status codes.
+  - Do not embed business rules or persistence logic directly in endpoint handlers.
+
+- **Error handling & responses**
+  - Prefer typed results and ProblemDetails-style error responses where appropriate.
+  - Return appropriate HTTP status codes for CRUD operations (e.g., 201 on create, 404 when resource not found, 400 for validation issues).
+
+New HTTP features should follow these conventions unless there is a strong reason and explicit documentation for deviating.
+

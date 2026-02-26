@@ -1,0 +1,26 @@
+---
+description: Testing strategy for the OMG backend
+alwaysApply: true
+---
+
+# Testing & TDD Rules
+
+- **General expectations**
+  - Every non-trivial business rule (especially invariants in the Domain layer) must have automated tests.
+  - When adding new behavior, prefer writing or updating tests before implementing the change.
+
+- **Test layers**
+  - **Domain tests**: unit tests for aggregates, value objects, and domain services.
+  - **Application tests**: unit tests for use-case handlers/services using in-memory or mocked persistence abstractions.
+  - **API/integration tests**: tests exercising minimal API endpoints using an in-memory host.
+
+- **Tooling**
+  - Use xUnit (or a similar mainstream .NET test framework) for unit and integration tests.
+  - Use clear naming for test classes and methods to describe the behavior under test.
+
+- **Workflow**
+  - When implementing a new user story, first identify the key rules and invariants and write tests for them.
+  - Ensure tests run successfully (`dotnet test`) before treating a change as complete or ready to finalize/commit.
+
+Agents should propose tests alongside code changes and avoid introducing new business logic without corresponding tests.
+
