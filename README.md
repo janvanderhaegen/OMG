@@ -36,7 +36,7 @@ For full details, see `ARCHITECTURE-FINAL.md`, which documents the final project
 - [X] US01 – Repository setup & Cursor configuration  
 As a developer, I want the repository initialized with basic structure, git, Cursor rules, and project-specific skills so that the project is ready for iterative, well-documented development.
 
-- [ ] US02 – Architecture design & documentation  
+- [X] US02 – Architecture design & documentation  
 As a developer, I want a clearly documented architecture (domains, layers, boundaries, main components, and data flow) so that implementation is consistent and easy to reason about.
 
 - [ ] US03 – Initial API project & health check  
