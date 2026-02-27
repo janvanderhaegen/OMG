@@ -34,9 +34,6 @@ Every session log must follow this structure:
 - Duration: time between the first initial chat message and now
 - Related user stories: USxx, USyy (or "N/A")
 
-## Initial chat message
-My initial chat message to the agent, at verbatim.
-
 ## Context
 Short, 2–4 sentence description of what this session focused on.
 
@@ -44,16 +41,8 @@ Short, 2–4 sentence description of what this session focused on.
 - Bullet list of key changes, decisions, and created/modified files.
 - Prefer 3–8 bullets, each 1–2 lines.
 
-## Design decisions
-- List non-obvious choices, trade-offs, or constraints that shaped the solution.
-- Include assumptions that might need revisiting later.
-
 ## Content expectations
 
 - Be **concise and information-dense**; avoid fluff.
-- Emphasize:
-  - Why changes were made.
-  - How they relate to specific user stories (US01–US22).
-  - What should happen next.
 - Do **not** paste long code snippets or stack traces; summarize them instead.
 

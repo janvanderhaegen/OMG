@@ -22,10 +22,7 @@ alwaysApply: true
 
   ## Context
   [Short description of what this session was about.]
-
-  ## Initial chat message
-  [My initial chat message to the agent, at verbatim.]
-
+ 
   ## What was done
   [Bullet list of key changes and activities.]
 
