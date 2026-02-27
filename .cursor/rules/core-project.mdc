@@ -40,7 +40,7 @@ alwaysApply: true
 
 - Favor small, focused changes that map clearly to user stories (US01–US22). Each agentic session and related changes should reference at least one USxx in the session log.
 - Keep documentation and comments concise and practical.
-- Treat the target runtime as **.NET 10** (`net10.0`) and the primary HTTP layer as **ASP.NET Core minimal APIs**, following the architecture described in `ARCHITECTURE.md`.
+- Treat the target runtime as **.NET 10** (`net10.0`) and the primary HTTP layer as **ASP.NET Core minimal APIs**, following the architecture described in `ARCHITECTURE-FINAL.md`.
 - Respect the `Domain → Application → Infrastructure → Api` layering and DDD guidance in `architecture-ddd.mdc`.
 - Prefer adding or updating automated tests when introducing new business rules, following `testing-strategy.mdc`.
 - When adding runtime configuration or containerization, follow `runtime-orchestration.mdc`.

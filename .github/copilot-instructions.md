@@ -22,7 +22,7 @@ These instructions guide GitHub Copilot’s behavior for this repository. They a
 
 ### DDD and architecture
 
-- Respect the `Domain → Application → Infrastructure → Api` layering described in `ARCHITECTURE.md`.
+- Respect the `Domain → Application → Infrastructure → Api` layering described in `ARCHITECTURE-FINAL.md`.
 - Keep domain types free from framework, HTTP, and database concerns where possible.
 - Place business rules and invariants in the Domain layer (aggregates, value objects, domain services), not in controllers or endpoints.
 

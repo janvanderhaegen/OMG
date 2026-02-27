@@ -17,7 +17,7 @@ Use this skill when you need to:
 
 When invoked, you should:
 
-1. Scan the solution structure and relevant files (e.g., `ARCHITECTURE.md`, domain/application/infrastructure projects).
+1. Scan the solution structure and relevant files (e.g., `ARCHITECTURE-FINAL.md`, domain/application/infrastructure projects).
 2. Summarize the current architecture in a few bullet points:
    - Key projects or folders and which layer they belong to.
    - How HTTP endpoints map to application use-cases and domain aggregates.
@@ -25,7 +25,7 @@ When invoked, you should:
    - Domain types depending on infrastructure or API concerns.
    - Business rules implemented only in controllers/endpoints instead of the Domain/Application layers.
 4. Suggest small, incremental refactorings that would align the code with:
-   - `ARCHITECTURE.md`
+   - `ARCHITECTURE-FINAL.md`
    - `.cursor/rules/architecture-ddd.mdc`
    - `.cursor/rules/aspnet-minimal-api.mdc`
 

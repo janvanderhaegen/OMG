@@ -6,7 +6,7 @@ alwaysApply: true
 # Architecture & DDD Rules
 
 - **Layering**
-  - Follow the `Domain → Application → Infrastructure → Api` dependency direction described in `ARCHITECTURE.md`.
+  - Follow the `Domain → Application → Infrastructure → Api` dependency direction described in `ARCHITECTURE-FINAL.md`.
   - Do not introduce circular dependencies or allow Api to depend directly on Infrastructure types.
 
 - **Domain design**

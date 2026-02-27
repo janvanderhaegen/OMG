@@ -29,11 +29,11 @@ This backend will be a **C#/.NET 10** service built on **ASP.NET Core minimal AP
   - Application depends on Domain and abstractions from Infrastructure (e.g., repositories, unit of work) but not concrete persistence types.
   - Api depends on Application and DTOs, but never directly on Infrastructure types.
 
-For more detail, see `ARCHITECTURE.md`, which documents the target project layout, dependency rules, and example data flows.
+For full details, see `ARCHITECTURE-FINAL.md`, which documents the final project layout, dependency rules, data flows, and runtime architecture.
 
 ## User stories (execution-flow order)
 
-- [ ] US01 – Repository setup & Cursor configuration  
+- [X] US01 – Repository setup & Cursor configuration  
 As a developer, I want the repository initialized with basic structure, git, Cursor rules, and project-specific skills so that the project is ready for iterative, well-documented development.
 
 - [ ] US02 – Architecture design & documentation  
