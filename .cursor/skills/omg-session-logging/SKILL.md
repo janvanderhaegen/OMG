@@ -34,6 +34,9 @@ Every session log must follow this structure:
 - Time: HH:MM (local time)
 - Related user stories: USxx, USyy (or "N/A")
 
+## Initial chat message
+My initial chat message to the agent, at verbatim.
+
 ## Context
 Short, 2–4 sentence description of what this session focused on.
 
