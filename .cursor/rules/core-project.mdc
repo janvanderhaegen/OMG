@@ -17,20 +17,20 @@ alwaysApply: true
   # OMG - Open Modular Gardening – Session Log
 
   - Date: YYYY-MM-DD
-  - Time: HH:MM (local)
+  - Duration: HH:MM (local)
   - Related user stories: USxx, ...
 
   ## Context
   [Short description of what this session was about.]
+
+  ## Initial chat message
+  [My initial chat message to the agent, at verbatim.]
 
   ## What was done
   [Bullet list of key changes and activities.]
 
   ## Design decisions
   [Non-trivial choices, trade-offs, or assumptions.]
-
-  ## Next steps
-  [Concrete follow-ups, TODOs, or open questions.]
   ```
 
 - Focus on **intent, reasoning, and decisions**, not low-level code diffs.
