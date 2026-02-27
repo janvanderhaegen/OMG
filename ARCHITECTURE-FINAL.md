@@ -81,7 +81,7 @@ Because details are unspecified, this report assumes:
 -   **Messaging requirement**: demonstrate message broker usage and
     event-driven patterns even if the system can be implemented
     synchronously.
--   **Time budget**: 5--10 working days (1--2 weeks).
+-   **Migrations**: db migrations are set to automatically update the database for development
  
 
 ## Domain-driven design strategy and suggested bounded contexts
@@ -222,20 +222,117 @@ model optimized for queries (CQRS).
 
 A clean interview structure:
 
--   **Commands**: intent to change state (validated, can fail).\
--   **Events**: facts that something happened (immutable).
+- **Commands**: intent to change state (validated, can fail).
+- **Events**: facts that something happened (immutable).
 
 This framing also aligns with event sourcing vocabulary (even when I
 don't implement full event sourcing).
 
-**Garden Management commands (examples)** - `CreateGarden` -
-`UpdateGardenDetails` / `SetTargetHumidityLevel` - `AddPlantToGarden`
-(enforces surface area invariant) - `UpdatePlant` -
-`RemovePlantFromGarden`
+**Garden Management commands (examples)**  
+- `CreateGarden`  
+- `UpdateGardenDetails` / `SetTargetHumidityLevel`  
+- `AddPlantToGarden` (enforces surface area invariant)  
+- `UpdatePlant`  
+- `RemovePlantFromGarden`
 
-**Garden Management domain/integration events (examples)** -
-`GardenCreated` - `GardenTargetHumidityLevelChanged` -
-`PlantAddedToGarden` - `PlantUpdated` - `PlantRemovedFromGarden`
+**Garden Management domain events (inside the bounded context)**  
+- `GardenCreatedDomainEvent`  
+- `GardenUpdatedDomainEvent`  
+- `GardenDeletedDomainEvent`
+
+These are raised directly by the `Garden` aggregate methods
+(`Create`, `UpdateDetails`, `MarkDeleted`) and are stored on the
+aggregate’s `DomainEvents` collection until they are dispatched.
+
+**Garden Management integration events (cross-context contracts)**  
+- `GardenCreated`  
+- `GardenRenamed`  
+- `GardenSurfaceAreaChanged`  
+- `GardenTargetHumidityChanged`  
+- `GardenDeleted`
+
+These live in `OMG.Messaging.Contracts` and are the only event types
+emitted to RabbitMQ. They closely mirror the domain events but are
+designed as stable, versioned contracts for other bounded contexts.
+They are mapped from domain events in the Infrastructure layer and
+published via MassTransit.
+
+#### How domain events flow to integration events in Garden Management
+
+The Garden Management bounded context uses domain events as the single
+source of truth and treats integration events as a projection of those
+domain facts:
+
+1. The `Garden` aggregate (in `OMG.Management.Domain`) raises
+   domain events when important business actions occur:
+
+   - `Garden.Create(...)` → `GardenCreatedDomainEvent`
+   - `garden.UpdateDetails(...)` → `GardenUpdatedDomainEvent`
+   - `garden.MarkDeleted(...)` → `GardenDeletedDomainEvent`
+
+2. The management API endpoints (grouped in
+   `ManagementGardenEndpoints` within `OMG.Api`) each act as a thin,
+   per-endpoint handler:
+
+   - One **endpoint method = one handler method**; there is no separate
+     reusable handler class for these CRUD operations.
+   - Each endpoint directly calls the relevant aggregate method
+     (e.g. `Garden.Create`, `garden.UpdateDetails`, `garden.MarkDeleted`).
+   - It persists the aggregate via `IGardenRepository` and
+     `IManagementUnitOfWork` (EF Core).
+   - After a successful `SaveChangesAsync`, it calls a generic
+     integration event publisher with the aggregate’s `DomainEvents`:
+
+   ```csharp
+   await integrationEventPublisher
+       .PublishIntegrationEventsAsync(garden.DomainEvents, cancellationToken);
+   ```
+
+3. The Infrastructure layer (`OMG.Management.Infrastructure`) implements
+   `IGardenIntegrationEventPublisher` in
+   `GardenIntegrationEventPublisher`, which:
+
+   - Accepts a sequence of `IDomainEvent` instances.
+   - Uses pattern matching to map each domain event to the corresponding
+     integration event:
+
+   ```csharp
+   foreach (var domainEvent in domainEvents)
+   {
+       switch (domainEvent)
+       {
+           case GardenCreatedDomainEvent created:
+               // map to GardenCreated integration event and publish
+               break;
+           case GardenUpdatedDomainEvent updated:
+               // map to GardenUpdated integration event and publish
+               break;
+           case GardenDeletedDomainEvent deleted:
+               // map to GardenDeleted integration event and publish
+               break;
+       }
+   }
+   ```
+
+   - Publishes the resulting integration events via MassTransit to
+     RabbitMQ, using the contracts in `OMG.Messaging.Contracts`.
+   - Tracks the aggregates associated with the processed domain events
+     and, after publishing, clears each aggregate’s `DomainEvents`
+     (via `aggregate.ClearDomainEvents()`) so that future operations
+     start with a clean slate and previously published events are not
+     emitted again.
+
+This design keeps:
+
+- **Domain events** as rich, internal signals that model business facts
+  within the bounded context.
+- **Integration events** as stable, versioned contracts for other
+  contexts, decoupled from the internal domain type shapes.
+
+In a later iteration, the same mapping logic can be moved behind a
+transactional outbox dispatcher so that domain events are converted to
+integration events and persisted in an outbox table before being
+delivered to RabbitMQ, eliminating the dual-writes problem.
 
 **Irrigation commands/events** - Internal command:
 `EvaluatePlantHumidity` (triggered by timer/tick) - NOT: Event:
@@ -697,6 +794,91 @@ assignment language clearly describes CRUD-style functionality. -
 Traditional REST semantics are the most appropriate contract for an
 externally consumed platform API. - DDD and command concepts remain
 internal implementation details.
+
+### REST vs domain-level actions (example)
+
+Even though the external HTTP API is CRUD- and resource-oriented, the
+**domain model does not expose a generic “update” operation**. Instead,
+it models **specific business actions** with their own methods and
+events.
+
+For example, the `PUT /api/v1/management/gardens/{gardenId}` endpoint
+accepts a payload that includes `name`, `totalSurfaceArea`, and
+`targetHumidityLevel`. Internally, the Garden aggregate exposes three
+distinct methods:
+
+- `Rename(string name, DateTimeOffset utcNow)`
+- `ChangeSurfaceArea(decimal totalSurfaceArea, DateTimeOffset utcNow)`
+- `ChangeTargetHumidity(int targetHumidityLevel, DateTimeOffset utcNow)`
+
+The endpoint handler compares the incoming values with the current
+aggregate state and only calls the corresponding method when the value
+has actually changed. Each method:
+
+- Validates its own input (e.g., non-empty name, positive surface area,
+  humidity between 0 and 100).
+- Raises a **specific domain event** when a change occurs:
+  - `GardenRenamedDomainEvent`
+  - `GardenSurfaceAreaChangedDomainEvent`
+  - `GardenTargetHumidityChangedDomainEvent`
+
+These domain events are then mapped 1:1 to equally specific integration
+events by the Infrastructure layer and published to RabbitMQ:
+
+- `GardenRenamedDomainEvent` → `GardenRenamed`
+- `GardenSurfaceAreaChangedDomainEvent` → `GardenSurfaceAreaChanged`
+- `GardenTargetHumidityChangedDomainEvent` → `GardenTargetHumidityChanged`
+
+This design keeps the **HTTP surface** simple and conventional, while
+the **domain layer** remains expressive and use-case-centric. It avoids
+an anemic “Update everything” method in the domain and instead models
+clear, intention-revealing actions that can evolve independently of the
+REST contract.
+
+### Soft-delete strategy in Garden Management
+
+In the Garden Management context, entities are **not hard-deleted** from
+the database. Instead, ebtutues are **soft-deleted**:
+
+- The `gardens` table includes:
+  - `Deleted` (boolean, required)
+  - `DeletedAt` (nullable timestamp)
+- The EF Core model (`GardenEntity`) maps these columns, and
+  `ManagementDbContext` defines a **global query filter**:
+
+```csharp
+garden.HasQueryFilter(x => !x.Deleted);
+```
+
+This ensures that, by default, all queries in the Management bounded
+context automatically exclude deleted gardens.
+
+On the domain side, the `Garden` aggregate models deletion explicitly:
+
+- Properties:
+  - `IsDeleted` (bool)
+  - `DeletedAt` (DateTimeOffset?)
+- Method:
+  - `MarkDeleted(DateTimeOffset utcNow)`:
+    - If already deleted, returns success without side effects.
+    - Otherwise sets `IsDeleted = true`, `DeletedAt = utcNow`,
+      updates `UpdatedAt`, and raises `GardenDeletedDomainEvent`.
+
+The delete endpoint (`DELETE /api/v1/management/gardens/{gardenId}`):
+
+1. Loads the garden via `IGardenRepository`.
+2. Calls `garden.MarkDeleted(...)` to apply the domain behavior and
+   raise `GardenDeletedDomainEvent`.
+3. Uses `IGardenRepository.Remove(garden)` to persist the soft-delete
+   flags (`Deleted`, `DeletedAt`) in the underlying `GardenEntity`.
+4. Calls `SaveChangesAsync` and then
+   `PublishIntegrationEventsAsync(garden.DomainEvents, ...)`, which
+   publishes a `GardenDeleted` integration event.
+
+This approach preserves an audit-friendly history in the write model,
+keeps the domain explicit about deletion semantics, and ensures that
+deleted gardens are transparently filtered out from normal management
+queries while still being observable via events.
 
 ------------------------------------------------------------------------
 

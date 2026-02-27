@@ -3,8 +3,12 @@
     <Project Path="src/OMG.Api/OMG.Api.csproj" />
     <Project Path="src/OMG.Aspire.AppHost/OMG.Aspire.AppHost.AppHost/OMG.Aspire.Host.csproj" Id="96c73259-f4dd-414d-80c3-56ba8b80a158" />
     <Project Path="src/OMG.Aspire.AppHost/OMG.Aspire.AppHost.ServiceDefaults/OMG.Aspire.ServiceDefaults.csproj" />
+    <Project Path="src/OMG.Management.Domain/OMG.Management.Domain.csproj" />
+    <Project Path="src/OMG.Management.Infrastructure/OMG.Management.Infrastructure.csproj" />
+    <Project Path="src/OMG.Messaging.Contracts/OMG.Messaging.Contracts.csproj" />
   </Folder>
   <Folder Name="/test/">
     <Project Path="test/OMG.Api.Tests/OMG.Api.Tests.csproj" />
+    <Project Path="test/OMG.Management.Domain.Tests/OMG.Management.Domain.Tests.csproj" />
   </Folder>
 </Solution>

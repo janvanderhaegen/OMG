@@ -14,22 +14,22 @@ This project is developed using the assistance of Cursor AI agents.
 
 ## Architecture
 
-This backend will be a **C#/.NET 10** service built on **ASP.NET Core minimal APIs**, following a lightweight, domain-driven modular-monolith design.
+This backend is a **C#/.NET 10** service built on **ASP.NET Core minimal APIs**, following a lightweight, domain-driven modular-monolith design.
 
 - **Runtime & framework**
   - Target framework: `net10.0` for all production and test projects.
   - Hosting model: ASP.NET Core **minimal API** with endpoint groups, typed results, and clear separation between HTTP concerns and domain logic.
 - **High-level layers**
-  - `Domain`: core aggregates and value objects (e.g., Garden, Plant, HumidityTarget, IrrigationEvent) plus domain services and invariants.
-  - `Application`: use-cases and orchestration (e.g., garden CRUD, surface area validation, irrigation simulation), orchestrating domain operations.
-  - `Infrastructure`: persistence, external services, and cross-cutting concerns (e.g., EF Core, database, messaging).
+  - `Domain`: core aggregates and value objects (e.g., Garden, Plant, HumidityTarget, IrrigationEvent) plus domain services and invariants. Aggregates raise **domain events** (e.g. `GardenCreatedDomainEvent`) to represent important business facts.
+  - `Application`: use-cases and orchestration (e.g., garden CRUD, surface area validation, irrigation simulation), orchestrating domain operations and coordinating persistence plus event publication.
+  - `Infrastructure`: persistence, external services, and cross-cutting concerns (e.g., EF Core, database, messaging). Domain events are mapped here to **integration events** (e.g. `GardenCreated`) and published to RabbitMQ via MassTransit.
   - `Api`: minimal API endpoints, input validation, mapping to/from DTOs, and error handling.
 - **Boundaries**
   - Domain does **not** depend on Application, Infrastructure, or Api.
-  - Application depends on Domain and abstractions from Infrastructure (e.g., repositories, unit of work) but not concrete persistence types.
-  - Api depends on Application and DTOs, but never directly on Infrastructure types.
+  - Application depends on Domain and abstractions from Infrastructure (e.g., repositories, unit of work, integration event publishers) but not concrete persistence types.
+  - Api depends on Application and DTOs, but never directly on persistence or messaging infrastructure.
 
-For full details, see `ARCHITECTURE-FINAL.md`, which documents the final project layout, dependency rules, data flows, and runtime architecture.
+For full details, including the domain-events-to-integration-events mapping in Garden Management, see `ARCHITECTURE-FINAL.md`.
 
 ## User stories (execution-flow order)
 
@@ -45,13 +45,13 @@ As a developer, I want an initial C#/.NET Web API project with a `/api/v1/health
 - [X] US04 – Containerized local environment (Docker) *(Bonus)*  
 As a developer, I can run the backend (API and backing services) locally using Docker and docker-compose so that onboarding and local setup are simple and consistent.
 
-- [ ] US05 – Garden CRUD  
+- [X] US05 – Garden CRUD  
 As a user, I can create, view, update, and delete gardens with a name, surface area, and location so that I can organize my physical garden spaces.
 
-- [ ] US06 – Garden overview  
+- [X] US06 – Garden overview  
 As a user, I can see an overview list of all my gardens linked to my account so that I understand what I am managing.
 
-- [ ] US07 – Garden target humidity configuration  
+- [X] US07 – Garden target humidity configuration  
 As a user, I can configure a target humidity level (0–100) per garden so that I can express the desired environment for the plants in that garden.
 
 - [ ] US08 – Plant creation in a garden  

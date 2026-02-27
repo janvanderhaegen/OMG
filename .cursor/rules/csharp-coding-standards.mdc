@@ -1,0 +1,7 @@
+# C# Coding Standards
+
+- **Avoid magic strings for error codes**
+  - Prefer named constants for error and status codes instead of repeating string literals.
+  - Example: use `ErrorCodes.GardenNotFound` instead of `"Garden.NotFound"` or similar inline strings.
+  - Define such constants in an appropriate shared location (e.g. `OMG.Management.Domain.Common.ErrorCodes`) and reference them from API handlers, domain logic, and tests.
+

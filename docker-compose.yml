@@ -10,7 +10,7 @@ services:
       - "8080:8080"
     environment:
       ASPNETCORE_ENVIRONMENT: Development
-      ConnectionStrings__Database: Host=postgres;Port=5432;Database=omg;Username=omg;Password=omg-password
+      ConnectionStrings__postgres: Host=postgres;Port=5432;Database=omg;Username=omg;Password=omg-password
       Messaging__RabbitMq__Host: rabbitmq
     depends_on:
       - postgres
@@ -27,6 +27,8 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    extra_hosts:
+      - "localhost:127.0.0.1"
 
   rabbitmq:
     image: rabbitmq:3-management
