@@ -33,70 +33,70 @@ For more detail, see `ARCHITECTURE.md`, which documents the target project layou
 
 ## User stories (execution-flow order)
 
-US01 – Repository setup & Cursor configuration  
+- [ ] US01 – Repository setup & Cursor configuration  
 As a developer, I want the repository initialized with basic structure, git, Cursor rules, and project-specific skills so that the project is ready for iterative, well-documented development.
 
-US02 – Architecture design & documentation  
+- [ ] US02 – Architecture design & documentation  
 As a developer, I want a clearly documented architecture (domains, layers, boundaries, main components, and data flow) so that implementation is consistent and easy to reason about.
 
-US03 – Initial API project & health check  
+- [ ] US03 – Initial API project & health check  
 As a developer, I want an initial C#/.NET Web API project with a `/api/health` endpoint so that I can verify the service is running and ready for further features.
 
-US04 – Containerized local environment (Docker) *(Bonus)*  
+- [ ] US04 – Containerized local environment (Docker) *(Bonus)*  
 As a developer, I can run the backend (API and backing services) locally using Docker and docker-compose so that onboarding and local setup are simple and consistent.
 
-US05 – Garden CRUD  
+- [ ] US05 – Garden CRUD  
 As a user, I can create, view, update, and delete gardens with a name, surface area, and location so that I can organize my physical garden spaces.
 
-US06 – Garden overview  
+- [ ] US06 – Garden overview  
 As a user, I can see an overview list of all my gardens linked to my account so that I understand what I am managing.
 
-US07 – Garden target humidity configuration  
+- [ ] US07 – Garden target humidity configuration  
 As a user, I can configure a target humidity level (0–100) per garden so that I can express the desired environment for the plants in that garden.
 
-US08 – Plant creation in a garden  
+- [ ] US08 – Plant creation in a garden  
 As a user, I can add plants to a garden with their basic details (name, species, type, plantation date, surface area required, ideal humidity level) so that I can track what is growing where.
 
-US09 – Plant CRUD  
+- [ ] US09 – Plant CRUD  
 As a user, I can view, update, and delete plant details in a garden so that I can keep my garden inventory accurate.
 
-US10 – Surface area validation  
+- [ ] US10 – Surface area validation  
 As a user, I receive a clear error when adding or updating plants in a garden would cause the total `surfaceAreaRequired` to exceed the garden’s `totalSurfaceArea` so that the system prevents overcrowding.
 
-US11 – RESTful API for core operations  
+- [ ] US11 – RESTful API for core operations  
 As an API consumer, I can interact with a RESTful HTTP API that exposes all garden and plant operations so that I can integrate this system with other tools.
 
-US12 – Swagger/OpenAPI documentation  
+- [ ] US12 – Swagger/OpenAPI documentation  
 As an API consumer, I can discover and test endpoints via a Swagger/OpenAPI UI so that I can quickly understand and try the API.
 
-US13 – Automated tests for core business rules  
+- [ ] US13 – Automated tests for core business rules  
 As a developer, I have automated tests for the core business rules (especially surface area validation and any critical invariants) so that changes are safe and regressions are caught early.
 
-US14 – Realtime plant metrics model *(Bonus)*  
+- [ ] US14 – Realtime plant metrics model *(Bonus)*  
 As a system, I track per-plant realtime metrics (last irrigation times and current humidity level) so that I can reason about watering needs.
 
-US15 – Irrigation simulation & control *(Bonus)*  
+- [ ] US15 – Irrigation simulation & control *(Bonus)*  
 As a user, I can trigger or observe a simulation that adjusts plant humidity over time according to plant type and issues commands to a mocked irrigation system when plants fall below their ideal humidity level.
 
-US16 – Watering activity overview *(Bonus)*  
+- [ ] US16 – Watering activity overview *(Bonus)*  
 As a user, I can request a report that shows how many plants were watered vs. not watered in a time window so that I can see if my irrigation strategy is working.
 
-US17 – Watering frequency per plant *(Bonus)*  
+- [ ] US17 – Watering frequency per plant *(Bonus)*  
 As a user, I can see how often each plant was watered in a time window so that I can spot outliers.
 
-US18 – Change reporting on plants *(Bonus)*  
+- [ ] US18 – Change reporting on plants *(Bonus)*  
 As a user, I can see how many plants were added or deleted since a chosen date so that I can audit garden changes.
 
-US19 – Authentication & login *(Bonus)*  
+- [ ] US19 – Authentication & login *(Bonus)*  
 As a user, I can register and log in securely so that my gardens and plants are protected.
 
-US20 – Email verification *(Bonus)*  
+- [ ] US20 – Email verification *(Bonus)*  
 As a user, I must confirm my email via a verification code before my account becomes active so that ownership is validated.
 
-US21 – Account deletion *(Bonus)*  
+- [ ] US21 – Account deletion *(Bonus)*  
 As a user, I can delete my account (and associated data, as defined) so that I remain in control of my presence in the system.
 
-US22 – Performance optimization of key endpoints *(Bonus)*  
+- [ ] US22 – Performance optimization of key endpoints *(Bonus)*  
 As a developer, I can identify performance-critical endpoints and apply reasonable optimizations (e.g. indexing, simple caching) so that frequently used calls stay fast.
 
 ## Getting started
