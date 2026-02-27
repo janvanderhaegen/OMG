@@ -433,6 +433,9 @@ on business rules and integration reliability:
 Key is to test the business logic and the "event-driven correctness"
 boundary (outbox + consumer).
 
+
+
+
 ### Observability
 
 OpenTelemetry is a vendor-neutral observability framework for
@@ -627,7 +630,7 @@ contracts, while keeping the runtime surface intentionally small.
 
 ## Aspire AppHost
 
-### OMG.AppHost
+### OMG.Aspire.Host
 
 -   Orchestrates:
     -   OMG.Api

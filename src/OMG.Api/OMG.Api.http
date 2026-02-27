@@ -1,0 +1,7 @@
+@OMG.Api_HostAddress = https://localhost:7072
+
+### Health check
+
+GET {{OMG.Api_HostAddress}}/api/v1/health
+Accept: application/json
+

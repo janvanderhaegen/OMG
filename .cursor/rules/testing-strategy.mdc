@@ -5,6 +5,9 @@ alwaysApply: true
 
 # Testing & TDD Rules
 
+- **Project location**
+  - Projects should be located under `/src`
+
 - **General expectations**
   - Every non-trivial business rule (especially invariants in the Domain layer) must have automated tests.
   - When adding new behavior, prefer writing or updating tests before implementing the change.

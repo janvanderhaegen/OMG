@@ -1,0 +1,43 @@
+version: "3.9"
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: omg-api
+    ports:
+      - "8080:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__Database: Host=postgres;Port=5432;Database=omg;Username=omg;Password=omg-password
+      Messaging__RabbitMq__Host: rabbitmq
+    depends_on:
+      - postgres
+      - rabbitmq
+
+  postgres:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: omg
+      POSTGRES_USER: omg
+      POSTGRES_PASSWORD: omg-password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    restart: unless-stopped
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: omg
+      RABBITMQ_DEFAULT_PASS: omg-password
+
+volumes:
+  postgres_data:
+

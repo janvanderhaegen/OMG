@@ -40,21 +40,14 @@ feat(garden): add basic garden CRUD
 - Implement create/read/update/delete endpoints for gardens
 - Enforce basic validation on surface area inputs
 ```
-
 ## Step 2 – Run tests
 
-- Run the project test suite (for this .NET solution, default to `dotnet test` from the repository root or solution directory, as appropriate).
-- If there are no tests, continue to the next step
-- If tests **fail**:
-  - Do **not** stage, commit, or push.
-  - Summarize the failures back to the user.
-  - Stop the finalize workflow.
+- In reality we would run the tests here, but they are locked because I'm using Visual Studio and keep forgetting to stop debugging. So, skip the tests.
 
 ## Step 3 – Commit
 
-- If there are tests, and all tests are green:
-  - Stage changes (for this case project, default to `git add .` unless the user has specified a narrower scope).
-  - Commit with the generated message.
+- Stage changes (for this case project, default to `git add .` unless the user has specified a narrower scope).
+- Commit with the generated message.
 - Do not modify git configuration or use destructive commands.
 
 ## Step 4 – Document the session

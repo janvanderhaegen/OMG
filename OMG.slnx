@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/OMG.Api/OMG.Api.csproj" />
+    <Project Path="src/OMG.Aspire.AppHost/OMG.Aspire.AppHost.AppHost/OMG.Aspire.Host.csproj" Id="96c73259-f4dd-414d-80c3-56ba8b80a158" />
+    <Project Path="src/OMG.Aspire.AppHost/OMG.Aspire.AppHost.ServiceDefaults/OMG.Aspire.ServiceDefaults.csproj" />
+  </Folder>
+  <Folder Name="/test/">
+    <Project Path="test/OMG.Api.Tests/OMG.Api.Tests.csproj" />
+  </Folder>
+</Solution>

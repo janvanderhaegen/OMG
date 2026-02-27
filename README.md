@@ -39,10 +39,10 @@ As a developer, I want the repository initialized with basic structure, git, Cur
 - [X] US02 – Architecture design & documentation  
 As a developer, I want a clearly documented architecture (domains, layers, boundaries, main components, and data flow) so that implementation is consistent and easy to reason about.
 
-- [ ] US03 – Initial API project & health check  
-As a developer, I want an initial C#/.NET Web API project with a `/api/health` endpoint so that I can verify the service is running and ready for further features.
+- [X] US03 – Initial API project & health check  
+As a developer, I want an initial C#/.NET Web API project with a `/api/v1/health` endpoint so that I can verify the service is running and ready for further features.
 
-- [ ] US04 – Containerized local environment (Docker) *(Bonus)*  
+- [X] US04 – Containerized local environment (Docker) *(Bonus)*  
 As a developer, I can run the backend (API and backing services) locally using Docker and docker-compose so that onboarding and local setup are simple and consistent.
 
 - [ ] US05 – Garden CRUD  
@@ -66,8 +66,8 @@ As a user, I receive a clear error when adding or updating plants in a garden wo
 - [ ] US11 – RESTful API for core operations  
 As an API consumer, I can interact with a RESTful HTTP API that exposes all garden and plant operations so that I can integrate this system with other tools.
 
-- [ ] US12 – Swagger/OpenAPI documentation  
-As an API consumer, I can discover and test endpoints via a Swagger/OpenAPI UI so that I can quickly understand and try the API.
+- [X] US12 – Swagger/Scalar/OpenAPI documentation  
+As an API consumer, I can discover and test endpoints via a Swagger/Scalar/OpenAPI UI so that I can quickly understand and try the API.
 
 - [ ] US13 – Automated tests for core business rules  
 As a developer, I have automated tests for the core business rules (especially surface area validation and any critical invariants) so that changes are safe and regressions are caught early.
@@ -101,7 +101,58 @@ As a developer, I can identify performance-critical endpoints and apply reasonab
 
 ## Getting started
 
-Implementation, run instructions, Docker configuration, and .NET Aspire setup will be added as the project is developed. All new backend code should:
+### Run the API directly (development)
+
+From the `src/OMG.Api` directory:
+
+```bash
+dotnet run
+```
+
+By default, the API will listen on the configured ASP.NET Core URLs. The health endpoint and OpenAPI document are available at:
+
+- Health: `https://localhost:7072/api/v1/health` (or the port configured by ASP.NET Core)
+- OpenAPI document: `/openapi/v1.json` 
+- Swagger: `/swagger/index.html` 
+- Scalar: `/scalar/v1` 
+
+### Run with Docker and docker-compose
+
+From the repository root:
+
+```bash
+docker compose up --build
+```
+
+This starts:
+
+- `api` (OMG.Api) on `http://localhost:8080`
+- `postgres` (PostgreSQL 16) on `localhost:5432`
+- `rabbitmq` (RabbitMQ with management UI) on `localhost:5672` and `http://localhost:15672`
+
+Key endpoints when running via Docker:
+
+- Health: `http://localhost:8080/api/v1/health`
+- OpenAPI document: `http://localhost:8080/openapi/v1.json`
+- Swagger:  `http://localhost:8080/swagger/index.html`
+- Scalar:  `http://localhost:8080/scalar/v1`
+
+### Run with Aspire AppHost
+
+From the `src/OMG.Aspire.Host` directory:
+
+```bash
+dotnet run
+```
+
+The AppHost orchestrates:
+
+- `OMG.Api`
+  - Swagger and Scalar are available as custom commands
+- PostgreSQL
+- RabbitMQ
+
+All new backend code should:
 
 - Target **.NET 10** (`net10.0`).
 - Use **ASP.NET Core minimal APIs** for HTTP endpoints.
