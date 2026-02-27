@@ -31,7 +31,7 @@ Every session log must follow this structure:
 # OMG - Open Modular Gardening – Session Log
 
 - Date: YYYY-MM-DD
-- Time: HH:MM (local time)
+- Duration: time between the first initial chat message and now
 - Related user stories: USxx, USyy (or "N/A")
 
 ## Initial chat message

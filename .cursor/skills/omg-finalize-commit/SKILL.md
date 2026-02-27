@@ -44,26 +44,35 @@ feat(garden): add basic garden CRUD
 ## Step 2 – Run tests
 
 - Run the project test suite (for this .NET solution, default to `dotnet test` from the repository root or solution directory, as appropriate).
+- If there are no tests, continue to the next step
 - If tests **fail**:
   - Do **not** stage, commit, or push.
   - Summarize the failures back to the user.
   - Stop the finalize workflow.
 
-## Step 3 – Commit and push
+## Step 3 – Commit
 
-- If tests are green:
+- If there are tests, and all tests are green:
   - Stage changes (for this case project, default to `git add .` unless the user has specified a narrower scope).
   - Commit with the generated message.
-  - Push with a normal `git push` (no `--force`).
 - Do not modify git configuration or use destructive commands.
 
 ## Step 4 – Document the session
 
-- Immediately after a successful push, create a new session log in `doc/` using the `note-a-session-logging` skill.
+- Then, create a new session log in `doc/` using the `note-a-session-logging` skill.
 - The log should:
   - Reference the commit hash and branch.
   - Summarize the scope of work, mapped to user stories.
   - Capture key design decision.
+
+
+## Step 5 - Commit and push
+- `git add .`
+- `git commit -m 'DOC: <name of the file>'` 
+- Pull
+  - If there are any conflicts that cannot be automatically merged, then pauze and let the user merge
+- Push with a normal `git push` (no `--force`).
+
 
 ## Safety notes
 
