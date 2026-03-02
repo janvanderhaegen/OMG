@@ -37,17 +37,17 @@ public static class ManagementGardenEndpoints
                     var gardens = await dbContext.Database
                         .SqlQueryRaw<GardenResponse>(
                             """
-                            SELECT g.[Id],
-                                   g.[Name],
-                                   g.[TotalSurfaceArea],
-                                   g.[TargetHumidityLevel],
-                                   g.[CreatedAt],
-                                   g.[UpdatedAt]
-                            FROM [gm].[gardens] AS g
-                            WHERE g.[Deleted] = 0
-                              AND g.[UserId] = {0}
+                            SELECT g."Id",
+                                   g."Name",
+                                   g."TotalSurfaceArea",
+                                   g."TargetHumidityLevel",
+                                   g."CreatedAt",
+                                   g."UpdatedAt"
+                            FROM "gm"."gardens" AS g
+                            WHERE g."Deleted" = FALSE
+                              AND g."UserId" = {0}
                             """,
-                            currentUserId.Value)
+                            currentUserId.Value.Value)
                         .ToListAsync(cancellationToken)
                         .ConfigureAwait(false);
 
@@ -74,18 +74,18 @@ public static class ManagementGardenEndpoints
                     var garden = await dbContext.Database
                         .SqlQueryRaw<GardenResponse>(
                             """
-                            SELECT g.[Id],
-                                   g.[Name],
-                                   g.[TotalSurfaceArea],
-                                   g.[TargetHumidityLevel],
-                                   g.[CreatedAt],
-                                   g.[UpdatedAt]
-                            FROM [gm].[gardens] AS g
-                            WHERE g.[Deleted] = 0
-                              AND g.[UserId] = {0}
-                              AND g.[Id] = {1}
+                            SELECT g."Id",
+                                   g."Name",
+                                   g."TotalSurfaceArea",
+                                   g."TargetHumidityLevel",
+                                   g."CreatedAt",
+                                   g."UpdatedAt"
+                            FROM "gm"."gardens" AS g
+                            WHERE g."Deleted" = FALSE
+                              AND g."UserId" = {0}
+                              AND g."Id" = {1}
                             """,
-                            currentUserId.Value,
+                            currentUserId.Value.Value,
                             gardenId)
                         .FirstOrDefaultAsync(cancellationToken)
                         .ConfigureAwait(false);

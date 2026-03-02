@@ -35,26 +35,13 @@ public static class ManagementPlantEndpoints
                         return TypedResults.Unauthorized();
                     }
 
-                    var garden = await dbContext.Database
-                        .SqlQueryRaw<GardenResponse>(
-                            """
-                            SELECT g.[Id],
-                                   g.[Name],
-                                   g.[TotalSurfaceArea],
-                                   g.[TargetHumidityLevel],
-                                   g.[CreatedAt],
-                                   g.[UpdatedAt]
-                            FROM [gm].[gardens] AS g
-                            WHERE g.[Deleted] = 0
-                              AND g.[UserId] = {0}
-                              AND g.[Id] = {1}
-                            """,
-                            currentUserId.Value,
-                            gardenId)
-                        .FirstOrDefaultAsync(cancellationToken)
+                    var gardenExists = await dbContext.Gardens
+                        .AnyAsync(
+                            g => g.UserId == currentUserId.Value.Value && g.Id == gardenId,
+                            cancellationToken)
                         .ConfigureAwait(false);
 
-                    if (garden is null)
+                    if (!gardenExists)
                     {
                         return TypedResults.NotFound();
                     }
@@ -62,16 +49,16 @@ public static class ManagementPlantEndpoints
                     var plants = await dbContext.Database
                         .SqlQueryRaw<PlantResponse>(
                             """
-                            SELECT p.[Id],
-                                   p.[GardenId],
-                                   p.[Name],
-                                   p.[Species],
-                                   p.[Type],
-                                   p.[PlantationDate],
-                                   p.[SurfaceAreaRequired],
-                                   p.[IdealHumidityLevel]
-                            FROM [gm].[plants] AS p
-                            WHERE p.[GardenId] = {0}
+                            SELECT p."Id",
+                                   p."GardenId",
+                                   p."Name",
+                                   p."Species",
+                                   p."Type",
+                                   p."PlantationDate",
+                                   p."SurfaceAreaRequired",
+                                   p."IdealHumidityLevel"
+                            FROM "gm"."plants" AS p
+                            WHERE p."GardenId" = {0}
                             """,
                             gardenId)
                         .ToListAsync(cancellationToken)
@@ -98,26 +85,13 @@ public static class ManagementPlantEndpoints
                         return TypedResults.Unauthorized();
                     }
 
-                    var garden = await dbContext.Database
-                        .SqlQueryRaw<GardenResponse>(
-                            """
-                            SELECT g.[Id],
-                                   g.[Name],
-                                   g.[TotalSurfaceArea],
-                                   g.[TargetHumidityLevel],
-                                   g.[CreatedAt],
-                                   g.[UpdatedAt]
-                            FROM [gm].[gardens] AS g
-                            WHERE g.[Deleted] = 0
-                              AND g.[UserId] = {0}
-                              AND g.[Id] = {1}
-                            """,
-                            currentUserId.Value,
-                            gardenId)
-                        .FirstOrDefaultAsync(cancellationToken)
+                    var gardenExists = await dbContext.Gardens
+                        .AnyAsync(
+                            g => g.UserId == currentUserId.Value.Value && g.Id == gardenId,
+                            cancellationToken)
                         .ConfigureAwait(false);
 
-                    if (garden is null)
+                    if (!gardenExists)
                     {
                         return TypedResults.NotFound();
                     }
@@ -125,17 +99,17 @@ public static class ManagementPlantEndpoints
                     var plant = await dbContext.Database
                         .SqlQueryRaw<PlantResponse>(
                             """
-                            SELECT p.[Id],
-                                   p.[GardenId],
-                                   p.[Name],
-                                   p.[Species],
-                                   p.[Type],
-                                   p.[PlantationDate],
-                                   p.[SurfaceAreaRequired],
-                                   p.[IdealHumidityLevel]
-                            FROM [gm].[plants] AS p
-                            WHERE p.[GardenId] = {0}
-                              AND p.[Id] = {1}
+                            SELECT p."Id",
+                                   p."GardenId",
+                                   p."Name",
+                                   p."Species",
+                                   p."Type",
+                                   p."PlantationDate",
+                                   p."SurfaceAreaRequired",
+                                   p."IdealHumidityLevel"
+                            FROM "gm"."plants" AS p
+                            WHERE p."GardenId" = {0}
+                              AND p."Id" = {1}
                             """,
                             gardenId,
                             plantId)
