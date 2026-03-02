@@ -1,6 +1,6 @@
 # OMG - Open Modular Gardening
 
-This repository contains the backend for the Open Modular Gardening case. It is a C#/.NET backend that will expose a RESTful API for managing users, gardens, plants, and (optionally) irrigation simulation and reporting.
+This repository contains the backend for the Open Modular Gardening case. It is a C#/.NET backend that will expose a RESTful API for managing users, gardens, plants, irrigation simulation and reporting.
 
 The project is built as part of an engineering case and is deliberately focused on clear domain modelling, testable business rules, and a transparent development process using Cursor.
 
@@ -11,23 +11,11 @@ This project is developed using the assistance of Cursor AI agents.
 - Cursor-specific rules and skills live under `.cursor/`.
 - After each meaningful agentic work session, a markdown summary is written into the `doc/` directory.
 - Reviewers can inspect the `doc/` files to understand how Cursor was used throughout the implementation.
+- Project took about 20 hours to complete (most time spent writing instructions for and waiting on cursor agents, parallel agents are hard on a very small codebase).
 
 ## Architecture
 
-This backend is a **C#/.NET 10** service built on **ASP.NET Core minimal APIs**, following a lightweight, domain-driven modular-monolith design.
-
-- **Runtime & framework**
-  - Target framework: `net10.0` for all production and test projects.
-  - Hosting model: ASP.NET Core **minimal API** with endpoint groups, typed results, and clear separation between HTTP concerns and domain logic.
-- **High-level layers**
-  - `Domain`: core aggregates and value objects (e.g., Garden, Plant, HumidityTarget, IrrigationEvent) plus domain services and invariants. Aggregates raise **domain events** (e.g. `GardenCreatedDomainEvent`) to represent important business facts.
-  - `Application`: use-cases and orchestration (e.g., garden CRUD, surface area validation, irrigation simulation), orchestrating domain operations and coordinating persistence plus event publication.
-  - `Infrastructure`: persistence, external services, and cross-cutting concerns (e.g., EF Core, database, messaging). Domain events are mapped here to **integration events** (e.g. `GardenCreated`) and published to RabbitMQ via MassTransit.
-  - `Api`: minimal API endpoints, input validation, mapping to/from DTOs, and error handling.
-- **Boundaries**
-  - Domain does **not** depend on Application, Infrastructure, or Api.
-  - Application depends on Domain and abstractions from Infrastructure (e.g., repositories, unit of work, integration event publishers) but not concrete persistence types.
-  - Api depends on Application and DTOs, but never directly on persistence or messaging infrastructure.
+This backend is a **C#/.NET 10** service built on **ASP.NET Core minimal APIs**, following a lightweight, domain-driven modular-monolith design with Clean (onion-layer) Architecture. Different domains communicate through async messaging so they can be split into microservices later.
 
 For full details, including the domain-events-to-integration-events mapping in Garden Management, see `ARCHITECTURE-FINAL.md`.
 
@@ -72,32 +60,33 @@ As an API consumer, I can discover and test endpoints via a Swagger/Scalar/OpenA
 - [X] US13 – Automated tests for core business rules  
 As a developer, I have automated tests for the core business rules (especially surface area validation and any critical invariants) so that changes are safe and regressions are caught early.
 
-- [ ] US14 – Realtime plant metrics model *(Bonus)*  
+- [X] US14 – Realtime plant metrics model *(Bonus)*  
 As a system, I track per-plant realtime metrics (last irrigation times and current humidity level) so that I can reason about watering needs.
 
-- [ ] US15 – Irrigation simulation & control *(Bonus)*  
+- [X] US15 – Irrigation simulation & control *(Bonus)*  
 As a user, I can trigger or observe a simulation that adjusts plant humidity over time according to plant type and issues commands to a mocked irrigation system when plants fall below their ideal humidity level.
 
-- [ ] US16 – Watering activity overview *(Bonus)*  
+- [X] US16 – Watering activity overview *(Bonus)*  
 As a user, I can request a report that shows how many plants were watered vs. not watered in a time window so that I can see if my irrigation strategy is working.
 
-- [ ] US17 – Watering frequency per plant *(Bonus)*  
+- [X] US17 – Watering frequency per plant *(Bonus)*  
 As a user, I can see how often each plant was watered in a time window so that I can spot outliers.
 
-- [ ] US18 – Change reporting on plants *(Bonus)*  
+- [X] US18 – Change reporting on plants *(Bonus)*  
 As a user, I can see how many plants were added or deleted since a chosen date so that I can audit garden changes.
 
-- [ ] US19 – Authentication & login *(Bonus)*  
+- [X] US19 – Authentication & login *(Bonus)*  
 As a user, I can register and log in securely so that my gardens and plants are protected.
 
-- [ ] US20 – Email verification *(Bonus)*  
+- [X] US20 – Email verification *(Bonus)*  
 As a user, I must confirm my email via a verification code before my account becomes active so that ownership is validated.
 
-- [ ] US21 – Account deletion *(Bonus)*  
+- [X] US21 – Account deletion *(Bonus)*  
 As a user, I can delete my account (and associated data, as defined) so that I remain in control of my presence in the system.
 
-- [ ] US22 – Performance optimization of key endpoints *(Bonus)*  
-As a developer, I can identify performance-critical endpoints and apply reasonable optimizations (e.g. indexing, simple caching) so that frequently used calls stay fast.
+- [-] US22 – Performance optimization of key endpoints *(Bonus)*  
+As a developer, I can identify performance-critical endpoints and apply reasonable optimizations (e.g. indexing, simple caching) so that frequently used calls stay fast. (partially implemented, redis caching strategy explained in `ARCHITECTURE-FINAL.md`)
+
 
 ## Getting started
 
@@ -134,6 +123,7 @@ Key endpoints when running via Docker:
 
 - Health: `http://localhost:8080/api/v1/health`
 - OpenAPI document: `http://localhost:8080/openapi/v1.json`
+      NOTE: when importing in PostMan, there is a [bug in Asp.NET core] (https://github.com/dotnet/aspnetcore/issues/64702) and you should remove the trailing slash from the baseURL variable. 
 - Swagger:  `http://localhost:8080/swagger/index.html`
 - Scalar:  `http://localhost:8080/scalar/v1`
 
@@ -152,10 +142,9 @@ The AppHost orchestrates:
 - PostgreSQL
 - RabbitMQ
 
-All new backend code should:
 
-- Target **.NET 10** (`net10.0`).
-- Use **ASP.NET Core minimal APIs** for HTTP endpoints.
-- Respect the **Domain → Application → Infrastructure → Api** layering described above.
+### Users
+Seeded database with users `bram@inthepocket.com` and `jonas@inthepocket.com`, password `HireMe123!`. 
+ 
 
 
