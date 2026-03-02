@@ -84,9 +84,7 @@ public class PlantHydrationStateTests
             Guid.NewGuid(),
             PlantType.Vegetable,
             idealHumidityLevel: 55).Value!;
-
-        // 50% -> 49% after one tick (decay 1). Still above 55? No, 49 < 55. So we need to drop below 55.
-        // Start at 50, ideal 55. After one tick: 49. 49 < 55 so we need watering.
+         
         state.ApplyMinuteTick(DateTimeOffset.UtcNow);
 
         var evt = Assert.Single(state.DomainEvents);

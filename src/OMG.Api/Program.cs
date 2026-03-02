@@ -8,8 +8,7 @@ using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
 using OMG.Api.Auth;
 using OMG.Api.Infrastructure.Messaging;
-using OMG.Api.Management;
-using OMG.Api.Telemetrics;
+using OMG.Api.Management; 
 using OMG.Auth.Infrastructure;
 using OMG.Auth.Infrastructure.Entities;
 using OMG.Auth.Infrastructure.Options;
@@ -20,8 +19,7 @@ using OMG.Management.Infrastructure;
 using OMG.Management.Infrastructure.Messaging;
 using OMG.Management.Domain.Abstractions;
 using OMG.Management.Domain.Gardens;
-using OMG.Management.Infrastructure.Repositories;
-using OMG.Telemetrics.Infrastructure;
+using OMG.Management.Infrastructure.Repositories; 
 
 var builder = WebApplication.CreateBuilder(args);
 var isDevelopment = builder.Environment.IsDevelopment();
@@ -56,20 +54,6 @@ builder.Services.AddDbContext<AuthDbContext>(options =>
         var connectionString = builder.Configuration.GetConnectionString("postgres")
                               ?? throw new InvalidOperationException("Postgres connection string 'postgres' is not configured.");
 
-        options.UseNpgsql(connectionString);
-    }
-});
-
-builder.Services.AddDbContext<TelemetricsDbContext>(options =>
-{
-    if (isTesting)
-    {
-        options.UseInMemoryDatabase("TelemetricsTests");
-    }
-    else
-    {
-        var connectionString = builder.Configuration.GetConnectionString("postgres")
-                              ?? throw new InvalidOperationException("Postgres connection string 'postgres' is not configured.");
         options.UseNpgsql(connectionString);
     }
 });
@@ -145,10 +129,7 @@ builder.Services.AddScoped<IManagementUnitOfWork, ManagementUnitOfWork>();
 builder.Services.AddScoped<IGardenIntegrationEventPublisher, GardenIntegrationEventPublisher>();
 builder.Services.AddScoped<IAuthIntegrationEventPublisher, AuthIntegrationEventPublisher>();
 
-builder.Services.AddScoped<ITokenService, TokenService>();
-
-builder.Services.AddScoped<IMockIrrigationSystemAdapter, MockIrrigationSystemAdapter>();
-builder.Services.AddHostedService<IrrigationSimulationWorker>();
+builder.Services.AddScoped<ITokenService, TokenService>(); 
 
 builder.Services.AddMessaging(builder.Configuration);
 
@@ -173,13 +154,6 @@ if (isDevelopment)
     }
 
     await AuthDbContextSeeder.SeedAsync(scope.ServiceProvider);
-
-    var teleDb = scope.ServiceProvider.GetRequiredService<TelemetricsDbContext>();
-    teleDb.Database.EnsureCreated();
-    if (teleDb.Database.GetMigrations().Any())
-    {
-        teleDb.Database.Migrate();
-    }
 }
 
 if (!app.Environment.IsEnvironment("Testing"))
@@ -200,8 +174,7 @@ app.MapScalarApiReference();
 app.MapHealthEndpoints();
 app.MapAuthEndpoints();
 app.MapManagementGardenEndpoints();
-app.MapManagementPlantEndpoints();
-app.MapTelemetricsEndpoints();
+app.MapManagementPlantEndpoints(); 
 
 app.Run();
 

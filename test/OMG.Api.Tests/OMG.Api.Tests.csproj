@@ -22,7 +22,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\\..\\src\\OMG.Api\\OMG.Api.csproj" />
-    <ProjectReference Include="..\..\src\OMG.Telemetrics.Infrastructure\OMG.Telemetrics.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

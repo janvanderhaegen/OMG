@@ -3,8 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using OMG.Auth.Infrastructure.Consumers;
 using OMG.Management.Infrastructure;
-using OMG.Management.Infrastructure.Consumers;
-using OMG.Telemetrics.Infrastructure.Consumers;
+using OMG.Management.Infrastructure.Consumers; 
 
 namespace OMG.Api.Infrastructure.Messaging;
 
@@ -22,10 +21,6 @@ public static class MessagingConfiguration
                 o.UseBusOutbox();
             });
 
-            x.AddConsumer<PlantAddedConsumer>();
-            x.AddConsumer<PlantRemovedConsumer>();
-            x.AddConsumer<PlantIdealHumidityLevelChangedConsumer>();
-            x.AddConsumer<PlantReclassifiedConsumer>(); 
             x.AddConsumer<RegistrationEmailConsumer>();
             x.AddConsumer<UserRemovedConsumer>();
 
