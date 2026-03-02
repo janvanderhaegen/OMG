@@ -21,5 +21,7 @@ public class GardenEntity
     public DateTimeOffset? DeletedAt { get; set; }
 
     public byte[] RowVersion { get; set; } = Array.Empty<byte>();
+
+    public ICollection<PlantEntity> Plants { get; set; } = new List<PlantEntity>();
 }
 

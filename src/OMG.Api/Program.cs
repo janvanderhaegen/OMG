@@ -59,7 +59,7 @@ app.MapScalarApiReference();
 
 app.MapHealthEndpoints();
 app.MapManagementGardenEndpoints();
- 
+app.MapManagementPlantEndpoints();
 
 app.Run();
 

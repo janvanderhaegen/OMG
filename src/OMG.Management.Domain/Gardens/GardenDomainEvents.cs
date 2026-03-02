@@ -12,3 +12,17 @@ public sealed record GardenTargetHumidityChangedDomainEvent(Garden Garden, DateT
 
 public sealed record GardenDeletedDomainEvent(Garden Garden, DateTimeOffset OccurredAt) : IDomainEvent;
 
+public sealed record PlantAddedToGardenDomainEvent(Garden Garden, Plant Plant, DateTimeOffset OccurredAt) : IDomainEvent;
+
+public sealed record PlantRenamedDomainEvent(Garden Garden, Plant Plant, DateTimeOffset OccurredAt) : IDomainEvent;
+
+public sealed record PlantReclassifiedDomainEvent(Garden Garden, Plant Plant, DateTimeOffset OccurredAt) : IDomainEvent;
+
+public sealed record PlantSurfaceAreaRequirementChangedDomainEvent(Garden Garden, Plant Plant, DateTimeOffset OccurredAt) : IDomainEvent;
+
+public sealed record PlantIdealHumidityLevelChangedDomainEvent(Garden Garden, Plant Plant, DateTimeOffset OccurredAt) : IDomainEvent;
+
+public sealed record PlantPlantationDateChangedDomainEvent(Garden Garden, Plant Plant, DateTimeOffset OccurredAt) : IDomainEvent;
+
+public sealed record PlantRemovedFromGardenDomainEvent(Garden Garden, Plant Plant, DateTimeOffset OccurredAt) : IDomainEvent;
+

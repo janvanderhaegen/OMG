@@ -8,6 +8,7 @@ var postgres = builder.AddPostgres("postgres")
 var rabbitMq = builder.AddRabbitMQ("rabbitmq");
 builder.AddProject<Projects.OMG_Api>("api")
     .WithReference(postgres)
+    .WaitFor(postgres)
     .WithSwaggerUI()
     .WithScalar();
 
