@@ -69,7 +69,7 @@ As an API consumer, I can interact with a RESTful HTTP API that exposes all gard
 - [X] US12 – Swagger/Scalar/OpenAPI documentation  
 As an API consumer, I can discover and test endpoints via a Swagger/Scalar/OpenAPI UI so that I can quickly understand and try the API.
 
-- [ ] US13 – Automated tests for core business rules  
+- [X] US13 – Automated tests for core business rules  
 As a developer, I have automated tests for the core business rules (especially surface area validation and any critical invariants) so that changes are safe and regressions are caught early.
 
 - [ ] US14 – Realtime plant metrics model *(Bonus)*  
