@@ -10,7 +10,7 @@ using OMG.Auth.Infrastructure.Messaging;
 using OMG.Management.Domain.Abstractions;
 using OMG.Management.Domain.Gardens;
 using OMG.Management.Infrastructure.Messaging;
-using OMG.Management.Domain.Common; 
+using OMG.Management.Domain.Common;
 
 namespace OMG.Api.Auth;
 
@@ -25,7 +25,8 @@ public static class AuthEndpoints
                 "/register",
                 async Task<Results<Created, ValidationProblem>> (
                     [FromServices] UserManager<ApplicationUser> userManager,
-                    [FromServices] IAuthIntegrationEventPublisher authIntegrationEventPublisher, 
+                    [FromServices] IAuthIntegrationEventPublisher authIntegrationEventPublisher,
+                    [FromServices] IManagementUnitOfWork unitOfWork,
                     [FromBody] RegisterRequest request,
                     CancellationToken cancellationToken) =>
                 {
@@ -77,7 +78,7 @@ public static class AuthEndpoints
                             verificationCode,
                             cancellationToken)
                         .ConfigureAwait(false);
-
+                    await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
                     return TypedResults.Created(string.Empty);
                 })
             .WithName("Register")

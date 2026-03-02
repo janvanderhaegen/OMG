@@ -24,7 +24,7 @@ public static class MessagingConfiguration
             x.AddConsumer<PlantAddedConsumer>();
             x.AddConsumer<PlantRemovedConsumer>();
             x.AddConsumer<PlantIdealHumidityLevelChangedConsumer>();
-            x.AddConsumer<PlantReclassifiedConsumer>();
+            x.AddConsumer<PlantReclassifiedConsumer>(); 
             x.AddConsumer<RegistrationEmailConsumer>();
 
             x.UsingRabbitMq((context, cfg) =>

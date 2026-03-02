@@ -11,7 +11,7 @@ namespace OMG.Auth.Infrastructure.Consumers;
 /// marks the account as verified. This behavior is for demo purposes only and
 /// should be replaced with a real email delivery and user-driven verification
 /// flow in a production system.
-/// </summary>
+/// </summary> 
 public class RegistrationEmailConsumer : IConsumer<SendRegistrationEmail>
 {
     private readonly AuthDbContext _dbContext;
