@@ -49,6 +49,11 @@ feat(garden): add basic garden CRUD
 - Stage changes (for this case project, default to `git add .` unless the user has specified a narrower scope).
 - Commit with the generated message.
 - Do not modify git configuration or use destructive commands.
+- Pull `git pull`
+  - If there are any conflicts that cannot be automatically merged, then pause and let the user merge
+- Push with a normal `git push` (no `--force`) 
+- If working on a GIT worktree, switch back to the correct branch before continueing with step 4. 
+ 
 
 ## Step 4 – Document the session
 
@@ -62,9 +67,9 @@ feat(garden): add basic garden CRUD
 ## Step 5 - Commit and push
 - `git add .`
 - `git commit -m 'DOC: <name of the file>'` 
-- Pull
-  - If there are any conflicts that cannot be automatically merged, then pauze and let the user merge
-- Push with a normal `git push` (no `--force`).
+- Pull `git pull`
+  - If there are any conflicts that cannot be automatically merged, then pause and let the user merge
+- Push with a normal `git push` (no `--force`)
 
 
 ## Safety notes
