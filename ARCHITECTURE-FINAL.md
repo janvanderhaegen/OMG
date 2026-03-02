@@ -280,6 +280,23 @@ domain facts:
      (e.g. `Garden.Create`, `garden.UpdateDetails`, `garden.MarkDeleted`).
    - It persists the aggregate via `IGardenRepository` and
      `IManagementUnitOfWork` (EF Core).
+   - **All mapping between domain aggregates and EF Core entities is the
+     responsibility of the repository implementation**, not the minimal
+     API endpoints. Endpoints must never directly manipulate
+     `ManagementDbContext` or `GardenEntity` / `PlantEntity` instances to
+     "mirror" domain changes.
+   - The canonical workflow for write operations is:
+
+     1. Load the `Garden` aggregate (optionally with `Plants`) via
+        `IGardenRepository`.
+     2. Call intent-revealing domain methods on the aggregate
+        (e.g. `AddPlant`, `RenamePlant`, `ChangeSurfaceArea`).
+     3. Ask the repository to persist the updated aggregate
+        (e.g. `SaveAsync(garden, cancellationToken)`), letting it map
+        domain types to `GardenEntity` / `PlantEntity`.
+     4. Commit the unit of work via `IManagementUnitOfWork` and then
+        publish integration events based on the aggregate’s
+        `DomainEvents`.
    - After a successful `SaveChangesAsync`, it calls a generic
      integration event publisher with the aggregate’s `DomainEvents`:
 

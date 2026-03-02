@@ -12,6 +12,8 @@ public interface IGardenRepository
 
     Task AddAsync(Garden garden, CancellationToken cancellationToken = default);
 
+    Task AddPlantAsync(Garden garden, Plant plant, CancellationToken cancellationToken = default);
+
     Task SaveAsync(Garden garden, CancellationToken cancellationToken = default);
 
     void Remove(Garden garden);

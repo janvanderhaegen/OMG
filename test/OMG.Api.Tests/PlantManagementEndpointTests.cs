@@ -261,6 +261,18 @@ public class PlantManagementEndpointTests : IClassFixture<ManagementApiFactory>
         Assert.Equal("Fruit", plant.Type);
         Assert.Equal(6, plant.SurfaceAreaRequired);
         Assert.Equal(65, plant.IdealHumidityLevel);
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ManagementDbContext>();
+
+            var entity = await db.Plants.SingleAsync(p => p.Id == plantId);
+            Assert.Equal("Cherry Tomato", entity.Name);
+            Assert.Equal("Solanum lycopersicum var. cerasiforme", entity.Species);
+            Assert.Equal("Fruit", entity.Type);
+            Assert.Equal(6, entity.SurfaceAreaRequired);
+            Assert.Equal(65, entity.IdealHumidityLevel);
+        }
     }
 
     [Fact]

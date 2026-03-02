@@ -51,6 +51,21 @@ public sealed class GardenRepository(ManagementDbContext dbContext) : IGardenRep
         await dbContext.Gardens.AddAsync(entity, cancellationToken).ConfigureAwait(false);
     }
 
+    public async Task AddPlantAsync(Garden garden, Plant plant, CancellationToken cancellationToken = default)
+    {
+        var entity = await dbContext.Gardens
+            .FirstOrDefaultAsync(x => x.Id == garden.Id.Value, cancellationToken)
+            .ConfigureAwait(false);
+
+        if (entity is null)
+        {
+            entity = MapToEntity(garden);
+            await dbContext.Gardens.AddAsync(entity, cancellationToken).ConfigureAwait(false);
+        }
+
+        entity.Plants.Add(MapToEntity(plant, garden.Id.Value));
+    }
+
     public async Task SaveAsync(Garden garden, CancellationToken cancellationToken = default)
     {
         var entity = await dbContext.Gardens
@@ -74,11 +89,32 @@ public sealed class GardenRepository(ManagementDbContext dbContext) : IGardenRep
         entity.Deleted = garden.IsDeleted;
         entity.DeletedAt = garden.DeletedAt;
 
-        entity.Plants.Clear();
+        var existingPlantsById = entity.Plants.ToDictionary(p => p.Id);
+        var desiredPlantIds = new HashSet<Guid>(garden.Plants.Select(p => p.Id.Value));
 
         foreach (var plant in garden.Plants)
         {
-            entity.Plants.Add(MapToEntity(plant, garden.Id.Value));
+            if (existingPlantsById.TryGetValue(plant.Id.Value, out var plantEntity))
+            {
+                plantEntity.Name = plant.Name;
+                plantEntity.Species = plant.Species;
+                plantEntity.Type = plant.Type.ToString();
+                plantEntity.PlantationDate = plant.PlantationDate;
+                plantEntity.SurfaceAreaRequired = plant.SurfaceAreaRequired.Value;
+                plantEntity.IdealHumidityLevel = plant.IdealHumidityLevel.Value;
+            }
+            else
+            {
+                entity.Plants.Add(MapToEntity(plant, garden.Id.Value));
+            }
+        }
+
+        foreach (var plantEntity in entity.Plants.ToList())
+        {
+            if (!desiredPlantIds.Contains(plantEntity.Id))
+            {
+                entity.Plants.Remove(plantEntity);
+            }
         }
     }
 

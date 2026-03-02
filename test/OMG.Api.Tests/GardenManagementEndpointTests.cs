@@ -150,6 +150,16 @@ public class GardenManagementEndpointTests : IClassFixture<ManagementApiFactory>
         Assert.Equal("Updated Name", garden.Name);
         Assert.Equal(25, garden.TotalSurfaceArea);
         Assert.Equal(65, garden.TargetHumidityLevel);
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ManagementDbContext>();
+
+            var entity = await db.Gardens.SingleAsync(g => g.Id == gardenId);
+            Assert.Equal("Updated Name", entity.Name);
+            Assert.Equal(25, entity.TotalSurfaceArea);
+            Assert.Equal(65, entity.TargetHumidityLevel);
+        }
     }
 
     [Fact]

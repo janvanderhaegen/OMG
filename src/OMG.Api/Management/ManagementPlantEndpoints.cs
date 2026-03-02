@@ -1,12 +1,9 @@
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using OMG.Api.Management.Models;
 using OMG.Management.Domain.Abstractions;
 using OMG.Management.Domain.Common;
 using OMG.Management.Domain.Gardens;
-using OMG.Management.Infrastructure;
-using OMG.Management.Infrastructure.Entities;
 using OMG.Management.Infrastructure.Messaging;
 
 namespace OMG.Api.Management;
@@ -77,7 +74,6 @@ public static class ManagementPlantEndpoints
                 "/",
                 async Task<Results<Created<PlantResponse>, NotFound, ValidationProblem>> (
                     [FromServices] IGardenRepository gardenRepository,
-                    [FromServices] ManagementDbContext dbContext,
                     [FromServices] IManagementUnitOfWork unitOfWork,
                     [FromServices] IGardenIntegrationEventPublisher integrationEventPublisher,
                     Guid gardenId,
@@ -126,21 +122,11 @@ public static class ManagementPlantEndpoints
 
                     var plant = result.Value;
 
-                    dbContext.Plants.Add(new PlantEntity
-                    {
-                        Id = plant.Id.Value,
-                        GardenId = garden.Id.Value,
-                        Name = plant.Name,
-                        Species = plant.Species,
-                        Type = plant.Type.ToString(),
-                        PlantationDate = plant.PlantationDate,
-                        SurfaceAreaRequired = plant.SurfaceAreaRequired.Value,
-                        IdealHumidityLevel = plant.IdealHumidityLevel.Value
-                    });
+                    await gardenRepository.AddPlantAsync(garden, plant, cancellationToken).ConfigureAwait(false);
+                    await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
                     await integrationEventPublisher
                         .PublishIntegrationEventsAsync(garden.DomainEvents, cancellationToken)
                         .ConfigureAwait(false);
-                    await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
                     var response = MapToResponse(garden.Id.Value, plant);
 
@@ -156,7 +142,6 @@ public static class ManagementPlantEndpoints
                 "/{plantId:guid}",
                 async Task<Results<Ok<PlantResponse>, NotFound, ValidationProblem>> (
                     [FromServices] IGardenRepository gardenRepository,
-                    [FromServices] ManagementDbContext dbContext,
                     [FromServices] IManagementUnitOfWork unitOfWork,
                     [FromServices] IGardenIntegrationEventPublisher integrationEventPublisher,
                     Guid gardenId,
@@ -234,23 +219,11 @@ public static class ManagementPlantEndpoints
                             return CreateValidationProblem(result.Error!);
                     }
 
-                    var plantEntity = await dbContext.Plants
-                        .SingleAsync(
-                            p => p.Id == plantId && p.GardenId == garden.Id.Value,
-                            cancellationToken)
-                        .ConfigureAwait(false);
-
-                    plantEntity.Name = plant.Name;
-                    plantEntity.Species = plant.Species;
-                    plantEntity.Type = plant.Type.ToString();
-                    plantEntity.PlantationDate = plant.PlantationDate;
-                    plantEntity.SurfaceAreaRequired = plant.SurfaceAreaRequired.Value;
-                    plantEntity.IdealHumidityLevel = plant.IdealHumidityLevel.Value;
-
+                    await gardenRepository.SaveAsync(garden, cancellationToken).ConfigureAwait(false);
+                    await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
                     await integrationEventPublisher
                         .PublishIntegrationEventsAsync(garden.DomainEvents, cancellationToken)
                         .ConfigureAwait(false);
-                    await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
                     var response = MapToResponse(garden.Id.Value, plant);
 
@@ -264,7 +237,6 @@ public static class ManagementPlantEndpoints
                 "/{plantId:guid}",
                 async Task<Results<NoContent, NotFound>> (
                     [FromServices] IGardenRepository gardenRepository,
-                    [FromServices] ManagementDbContext dbContext,
                     [FromServices] IManagementUnitOfWork unitOfWork,
                     [FromServices] IGardenIntegrationEventPublisher integrationEventPublisher,
                     Guid gardenId,
@@ -294,22 +266,11 @@ public static class ManagementPlantEndpoints
                         return TypedResults.NotFound();
                     }
 
-                    var plantEntity = await dbContext.Plants
-                        .SingleOrDefaultAsync(
-                            p => p.Id == plantId && p.GardenId == garden.Id.Value,
-                            cancellationToken)
-                        .ConfigureAwait(false);
-
-                    if (plantEntity is null)
-                    {
-                        return TypedResults.NotFound();
-                    }
-
-                    dbContext.Plants.Remove(plantEntity);
+                    await gardenRepository.SaveAsync(garden, cancellationToken).ConfigureAwait(false);
+                    await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
                     await integrationEventPublisher
                         .PublishIntegrationEventsAsync(garden.DomainEvents, cancellationToken)
                         .ConfigureAwait(false);
-                    await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
                     return TypedResults.NoContent();
                 })
