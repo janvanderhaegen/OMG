@@ -235,21 +235,6 @@ public static class ManagementPlantEndpoints
                         return TypedResults.NotFound();
                     }
 
-                    if (!Enum.TryParse<PlantType>(request.Type, ignoreCase: true, out var plantType))
-                    {
-                        var validationErrors = new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase)
-                        {
-                            ["type"] = ["Invalid plant type. Allowed values are Vegetable, Fruit, or Flower."]
-                        };
-
-                        var error = new Error(
-                            ErrorCodes.PlantValidationFailed,
-                            "One or more validation errors occurred while updating a plant in a garden.",
-                            validationErrors);
-
-                        return CreateValidationProblem(error);
-                    }
-
                     var utcNow = DateTimeOffset.UtcNow;
                     var plantIdDomain = new PlantId(plantId);
 
@@ -261,31 +246,61 @@ public static class ManagementPlantEndpoints
                             return CreateValidationProblem(result.Error!);
                     }
 
+                    PlantType? parsedPlantType = null;
+                    if (request.Type is not null)
+                    {
+                        if (!Enum.TryParse<PlantType>(request.Type, ignoreCase: true, out var plantType))
+                        {
+                            var validationErrors = new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase)
+                            {
+                                ["type"] = ["Invalid plant type. Allowed values are Vegetable, Fruit, or Flower."]
+                            };
+
+                            var error = new Error(
+                                ErrorCodes.PlantValidationFailed,
+                                "One or more validation errors occurred while updating a plant in a garden.",
+                                validationErrors);
+
+                            return CreateValidationProblem(error);
+                        }
+
+                        parsedPlantType = plantType;
+                    }
+
                     var trimmedSpecies = request.Species?.Trim() ?? plant.Species;
-                    if (!string.Equals(trimmedSpecies, plant.Species, StringComparison.Ordinal) || plant.Type != plantType)
+                    var newPlantType = parsedPlantType ?? plant.Type;
+
+                    var shouldReclassify =
+                        (request.Species is not null || request.Type is not null)
+                        && (!string.Equals(trimmedSpecies, plant.Species, StringComparison.Ordinal) || newPlantType != plant.Type);
+
+                    if (shouldReclassify)
                     {
-                        var result = garden.ReclassifyPlant(plantIdDomain, trimmedSpecies, plantType, utcNow);
+                        var result = garden.ReclassifyPlant(plantIdDomain, trimmedSpecies, newPlantType, utcNow);
                         if (result.IsFailure)
                             return CreateValidationProblem(result.Error!);
                     }
 
-                    if (request.SurfaceAreaRequired != plant.SurfaceAreaRequired.Value)
+                    if (request.SurfaceAreaRequired is not null
+                        && request.SurfaceAreaRequired.Value != plant.SurfaceAreaRequired.Value)
                     {
-                        var result = garden.DefineSurfaceAreaRequirement(plantIdDomain, request.SurfaceAreaRequired, utcNow);
+                        var result = garden.DefineSurfaceAreaRequirement(plantIdDomain, request.SurfaceAreaRequired.Value, utcNow);
                         if (result.IsFailure)
                             return CreateValidationProblem(result.Error!);
                     }
 
-                    if (request.IdealHumidityLevel != plant.IdealHumidityLevel.Value)
+                    if (request.IdealHumidityLevel is not null
+                        && request.IdealHumidityLevel.Value != plant.IdealHumidityLevel.Value)
                     {
-                        var result = garden.AdjustIdealHumidity(plantIdDomain, request.IdealHumidityLevel, utcNow);
+                        var result = garden.AdjustIdealHumidity(plantIdDomain, request.IdealHumidityLevel.Value, utcNow);
                         if (result.IsFailure)
                             return CreateValidationProblem(result.Error!);
                     }
 
-                    if (request.PlantationDate != plant.PlantationDate)
+                    if (request.PlantationDate is not null
+                        && request.PlantationDate.Value != plant.PlantationDate)
                     {
-                        var result = garden.SetPlantationDate(plantIdDomain, request.PlantationDate, utcNow);
+                        var result = garden.SetPlantationDate(plantIdDomain, request.PlantationDate.Value, utcNow);
                         if (result.IsFailure)
                             return CreateValidationProblem(result.Error!);
                     }

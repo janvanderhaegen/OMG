@@ -9,12 +9,12 @@ public sealed record CreatePlantRequest(
     int IdealHumidityLevel);
 
 public sealed record UpdatePlantRequest(
-    string Name,
-    string Species,
-    string Type,
-    DateTimeOffset PlantationDate,
-    decimal SurfaceAreaRequired,
-    int IdealHumidityLevel);
+    string? Name,
+    string? Species,
+    string? Type,
+    DateTimeOffset? PlantationDate,
+    decimal? SurfaceAreaRequired,
+    int? IdealHumidityLevel);
 
 public sealed record PlantResponse(
     Guid Id,

@@ -6,9 +6,9 @@ public sealed record CreateGardenRequest(
     int TargetHumidityLevel);
 
 public sealed record UpdateGardenRequest(
-    string Name,
-    decimal TotalSurfaceArea,
-    int TargetHumidityLevel);
+    string? Name,
+    decimal? TotalSurfaceArea,
+    int? TargetHumidityLevel);
 
 public sealed record GardenResponse(
     Guid Id, 

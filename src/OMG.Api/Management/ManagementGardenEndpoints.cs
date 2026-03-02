@@ -178,9 +178,10 @@ public static class ManagementGardenEndpoints
 
                     var anyChange = false;
 
-                    if (!string.Equals(request.Name, garden.Name, StringComparison.Ordinal))
+                    var trimmedName = request.Name?.Trim();
+                    if (trimmedName is not null && !string.Equals(trimmedName, garden.Name, StringComparison.Ordinal))
                     {
-                        var renameResult = garden.Rename(request.Name, utcNow);
+                        var renameResult = garden.Rename(trimmedName, utcNow);
                         if (renameResult.IsFailure)
                         {
                             return CreateValidationProblem(renameResult.Error!);
@@ -189,9 +190,10 @@ public static class ManagementGardenEndpoints
                         anyChange = true;
                     }
 
-                    if (request.TotalSurfaceArea != garden.TotalSurfaceArea.Value)
+                    if (request.TotalSurfaceArea is not null
+                        && request.TotalSurfaceArea.Value != garden.TotalSurfaceArea.Value)
                     {
-                        var surfaceResult = garden.ChangeSurfaceArea(request.TotalSurfaceArea, utcNow);
+                        var surfaceResult = garden.ChangeSurfaceArea(request.TotalSurfaceArea.Value, utcNow);
                         if (surfaceResult.IsFailure)
                         {
                             return CreateValidationProblem(surfaceResult.Error!);
@@ -200,9 +202,10 @@ public static class ManagementGardenEndpoints
                         anyChange = true;
                     }
 
-                    if (request.TargetHumidityLevel != garden.TargetHumidityLevel.Value)
+                    if (request.TargetHumidityLevel is not null
+                        && request.TargetHumidityLevel.Value != garden.TargetHumidityLevel.Value)
                     {
-                        var humidityResult = garden.ChangeTargetHumidity(request.TargetHumidityLevel, utcNow);
+                        var humidityResult = garden.ChangeTargetHumidity(request.TargetHumidityLevel.Value, utcNow);
                         if (humidityResult.IsFailure)
                         {
                             return CreateValidationProblem(humidityResult.Error!);
