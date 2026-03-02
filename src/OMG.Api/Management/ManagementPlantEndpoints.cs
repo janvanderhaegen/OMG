@@ -123,10 +123,10 @@ public static class ManagementPlantEndpoints
                     var plant = result.Value;
 
                     await gardenRepository.AddPlantAsync(garden, plant, cancellationToken).ConfigureAwait(false);
-                    await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
                     await integrationEventPublisher
                         .PublishIntegrationEventsAsync(garden.DomainEvents, cancellationToken)
                         .ConfigureAwait(false);
+                    await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
                     var response = MapToResponse(garden.Id.Value, plant);
 
@@ -220,10 +220,10 @@ public static class ManagementPlantEndpoints
                     }
 
                     await gardenRepository.SaveAsync(garden, cancellationToken).ConfigureAwait(false);
-                    await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
                     await integrationEventPublisher
                         .PublishIntegrationEventsAsync(garden.DomainEvents, cancellationToken)
                         .ConfigureAwait(false);
+                    await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
                     var response = MapToResponse(garden.Id.Value, plant);
 
@@ -267,10 +267,10 @@ public static class ManagementPlantEndpoints
                     }
 
                     await gardenRepository.SaveAsync(garden, cancellationToken).ConfigureAwait(false);
-                    await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
                     await integrationEventPublisher
                         .PublishIntegrationEventsAsync(garden.DomainEvents, cancellationToken)
                         .ConfigureAwait(false);
+                    await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
                     return TypedResults.NoContent();
                 })

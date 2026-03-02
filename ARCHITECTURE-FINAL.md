@@ -294,15 +294,22 @@ domain facts:
      3. Ask the repository to persist the updated aggregate
         (e.g. `SaveAsync(garden, cancellationToken)`), letting it map
         domain types to `GardenEntity` / `PlantEntity`.
-     4. Commit the unit of work via `IManagementUnitOfWork` and then
-        publish integration events based on the aggregate’s
+     4. Publish integration events based on the aggregate’s
         `DomainEvents`.
-   - After a successful `SaveChangesAsync`, it calls a generic
-     integration event publisher with the aggregate’s `DomainEvents`:
+     5. Call `IManagementUnitOfWork.SaveChangesAsync(...)` **as the last
+        infrastructural action in the handler, just before mapping the
+        response**, and always **after** integration events have been
+        published for the current operation.
+   - Each endpoint first dispatches integration events and then commits
+     the unit of work with `SaveChangesAsync`; mapping the HTTP response
+     DTO is the final step and performs no further persistence or
+     messaging side-effects:
 
    ```csharp
    await integrationEventPublisher
        .PublishIntegrationEventsAsync(garden.DomainEvents, cancellationToken);
+
+   await unitOfWork.SaveChangesAsync(cancellationToken);
    ```
 
 3. The Infrastructure layer (`OMG.Management.Infrastructure`) implements
