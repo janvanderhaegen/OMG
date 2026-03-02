@@ -53,17 +53,19 @@ public sealed class GardenRepository(ManagementDbContext dbContext) : IGardenRep
 
     public async Task AddPlantAsync(Garden garden, Plant plant, CancellationToken cancellationToken = default)
     {
+        await dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
         var entity = await dbContext.Gardens
             .FirstOrDefaultAsync(x => x.Id == garden.Id.Value, cancellationToken)
             .ConfigureAwait(false);
 
         if (entity is null)
         {
-            entity = MapToEntity(garden);
-            await dbContext.Gardens.AddAsync(entity, cancellationToken).ConfigureAwait(false);
+            throw new Exception("Garden was no longer found in the database");
         }
 
-        entity.Plants.Add(MapToEntity(plant, garden.Id.Value));
+        var plantEntity = MapToEntity(plant, garden.Id.Value);
+        dbContext.Plants.Add(plantEntity); 
     }
 
     public async Task SaveAsync(Garden garden, CancellationToken cancellationToken = default)
@@ -75,9 +77,7 @@ public sealed class GardenRepository(ManagementDbContext dbContext) : IGardenRep
 
         if (entity is null)
         {
-            entity = MapToEntity(garden);
-            await dbContext.Gardens.AddAsync(entity, cancellationToken).ConfigureAwait(false);
-            return;
+            throw new Exception("Garden was no longer found in the database");
         }
 
         entity.UserId = garden.UserId.Value;

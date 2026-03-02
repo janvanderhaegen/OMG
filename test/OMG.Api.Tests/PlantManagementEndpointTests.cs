@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using OMG.Api.Management.Models;
 using OMG.Management.Infrastructure;
 using OMG.Management.Infrastructure.Entities;
+using OMG.Api.Tests.Auth;
 
 namespace OMG.Api.Tests;
 
@@ -23,7 +24,8 @@ public class PlantManagementEndpointTests : IClassFixture<ManagementApiFactory>
     [Fact]
     public async Task GetPlantsForGarden_ReturnsPlants()
     {
-        var userId = Guid.NewGuid();
+        var authenticated = await AuthTestHelper.AuthenticateAsync(_factory, _client, "plants-user@example.com");
+        var userId = authenticated.UserId;
         var gardenId = Guid.NewGuid();
         var plantId = Guid.NewGuid();
 
@@ -70,7 +72,8 @@ public class PlantManagementEndpointTests : IClassFixture<ManagementApiFactory>
     [Fact]
     public async Task GetPlantById_ReturnsPlant()
     {
-        var userId = Guid.NewGuid();
+        var authenticated = await AuthTestHelper.AuthenticateAsync(_factory, _client, "plants-user2@example.com");
+        var userId = authenticated.UserId;
         var gardenId = Guid.NewGuid();
         var plantId = Guid.NewGuid();
 
@@ -118,7 +121,8 @@ public class PlantManagementEndpointTests : IClassFixture<ManagementApiFactory>
     [Fact]
     public async Task CreatePlant_CreatesAndReturnsPlant()
     {
-        var userId = Guid.NewGuid();
+        var authenticated = await AuthTestHelper.AuthenticateAsync(_factory, _client, "plants-create@example.com");
+        var userId = authenticated.UserId;
         var gardenId = Guid.NewGuid();
 
         using (var scope = _factory.Services.CreateScope())
@@ -178,7 +182,8 @@ public class PlantManagementEndpointTests : IClassFixture<ManagementApiFactory>
     [Fact]
     public async Task CreatePlant_Fails_When_SurfaceArea_Constraint_Violated()
     {
-        var userId = Guid.NewGuid();
+        var authenticated = await AuthTestHelper.AuthenticateAsync(_factory, _client, "plants-surface@example.com");
+        var userId = authenticated.UserId;
         var gardenId = Guid.NewGuid();
 
         using (var scope = _factory.Services.CreateScope())
@@ -220,7 +225,8 @@ public class PlantManagementEndpointTests : IClassFixture<ManagementApiFactory>
     [Fact]
     public async Task UpdatePlant_UpdatesAndReturnsPlant()
     {
-        var userId = Guid.NewGuid();
+        var authenticated = await AuthTestHelper.AuthenticateAsync(_factory, _client, "plants-update@example.com");
+        var userId = authenticated.UserId;
         var gardenId = Guid.NewGuid();
         var plantId = Guid.NewGuid();
 
@@ -291,7 +297,8 @@ public class PlantManagementEndpointTests : IClassFixture<ManagementApiFactory>
     [Fact]
     public async Task DeletePlant_RemovesPlant()
     {
-        var userId = Guid.NewGuid();
+        var authenticated = await AuthTestHelper.AuthenticateAsync(_factory, _client, "plants-delete@example.com");
+        var userId = authenticated.UserId;
         var gardenId = Guid.NewGuid();
         var plantId = Guid.NewGuid();
 

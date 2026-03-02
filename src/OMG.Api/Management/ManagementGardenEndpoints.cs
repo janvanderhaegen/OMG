@@ -1,7 +1,9 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using OMG.Api.Management.Models;
+using OMG.Api.Security;
 using OMG.Management.Domain.Abstractions;
 using OMG.Management.Domain.Common;
 using OMG.Management.Domain.Gardens;
@@ -15,41 +17,55 @@ public static class ManagementGardenEndpoints
     public static IEndpointRouteBuilder MapManagementGardenEndpoints(this IEndpointRouteBuilder endpoints)
     {
         var group = endpoints.MapGroup("/api/v1/management/gardens")
-            .WithTags("Garden Management");
+            .WithTags("Garden Management")
+            .RequireAuthorization();
 
         group.MapGet(
-            "/",
-            async Task<Ok<IReadOnlyList<GardenResponse>>> (
-                [FromServices] IGardenRepository gardenRepository,
-                [FromQuery] Guid userId,
-                CancellationToken cancellationToken) =>
-            {
-                var gardens = await gardenRepository
-                    .ListByUserAsync(new UserId(userId), cancellationToken)
-                    .ConfigureAwait(false);
+                "/",
+                async Task<Results<Ok<IReadOnlyList<GardenResponse>>, UnauthorizedHttpResult>> (
+                    [FromServices] IGardenRepository gardenRepository,
+                    ClaimsPrincipal user,
+                    CancellationToken cancellationToken) =>
+                {
+                    var currentUserId = user.GetDomainUserId();
+                    if (currentUserId is null)
+                    {
+                        return TypedResults.Unauthorized();
+                    }
 
-                var responses = gardens
-                    .Select(MapToResponse)
-                    .ToList();
+                    var gardens = await gardenRepository
+                        .ListByUserAsync(currentUserId.Value, cancellationToken)
+                        .ConfigureAwait(false);
 
-                return TypedResults.Ok((IReadOnlyList<GardenResponse>)responses);
-            })
+                    var responses = gardens
+                        .Select(MapToResponse)
+                        .ToList();
+
+                    return TypedResults.Ok((IReadOnlyList<GardenResponse>)responses);
+                })
             .WithName("GetGardensForUser")
             .WithSummary("Lists all gardens for the specified user.")
             .WithDescription("Returns all gardens owned by the specified user.");
 
         group.MapGet(
                 "/{gardenId:guid}",
-                async Task<Results<Ok<GardenResponse>, NotFound>> (
+                async Task<Results<Ok<GardenResponse>, NotFound, UnauthorizedHttpResult>> (
                     [FromServices] IGardenRepository gardenRepository,
+                    ClaimsPrincipal user,
                     Guid gardenId,
                     CancellationToken cancellationToken) =>
                 {
+                    var currentUserId = user.GetDomainUserId();
+                    if (currentUserId is null)
+                    {
+                        return TypedResults.Unauthorized();
+                    }
+
                     var garden = await gardenRepository
                         .GetByIdAsync(new GardenId(gardenId), cancellationToken)
                         .ConfigureAwait(false);
 
-                    if (garden is null)
+                    if (garden is null || garden.UserId != currentUserId.Value)
                     {
                         return TypedResults.NotFound();
                     }
@@ -62,17 +78,24 @@ public static class ManagementGardenEndpoints
 
         group.MapPost(
                 "/",
-                async Task<Results<Created<GardenResponse>, ValidationProblem>> (
+                async Task<Results<Created<GardenResponse>, ValidationProblem, UnauthorizedHttpResult>> (
                     [FromServices] IGardenRepository gardenRepository,
                     [FromServices] IManagementUnitOfWork unitOfWork,
                     [FromServices] IGardenIntegrationEventPublisher integrationEventPublisher,
+                    ClaimsPrincipal user,
                     [FromBody] CreateGardenRequest request,
                     CancellationToken cancellationToken) =>
                 {
+                    var currentUserId = user.GetDomainUserId();
+                    if (currentUserId is null)
+                    {
+                        return TypedResults.Unauthorized();
+                    }
+
                     var utcNow = DateTimeOffset.UtcNow;
 
                     var result = Garden.Create(
-                        new UserId(request.UserId),
+                        currentUserId.Value,
                         request.Name,
                         request.TotalSurfaceArea,
                         request.TargetHumidityLevel,
@@ -102,19 +125,26 @@ public static class ManagementGardenEndpoints
 
         group.MapPut(
                 "/{gardenId:guid}",
-                async Task<Results<Ok<GardenResponse>, NotFound, ValidationProblem>> (
+                async Task<Results<Ok<GardenResponse>, NotFound, ValidationProblem, UnauthorizedHttpResult>> (
                     [FromServices] IGardenRepository gardenRepository,
                     [FromServices] IManagementUnitOfWork unitOfWork,
                     [FromServices] IGardenIntegrationEventPublisher integrationEventPublisher,
+                    ClaimsPrincipal user,
                     Guid gardenId,
                     [FromBody] UpdateGardenRequest request,
                     CancellationToken cancellationToken) =>
                 {
+                    var currentUserId = user.GetDomainUserId();
+                    if (currentUserId is null)
+                    {
+                        return TypedResults.Unauthorized();
+                    }
+
                     var garden = await gardenRepository
                         .GetByIdAsync(new GardenId(gardenId), cancellationToken)
                         .ConfigureAwait(false);
 
-                    if (garden is null)
+                    if (garden is null || garden.UserId != currentUserId.Value)
                     {
                         return TypedResults.NotFound();
                     }
@@ -175,18 +205,25 @@ public static class ManagementGardenEndpoints
 
         group.MapDelete(
                 "/{gardenId:guid}",
-                async Task<Results<NoContent, NotFound>> (
+                async Task<Results<NoContent, NotFound, UnauthorizedHttpResult>> (
                     [FromServices] IGardenRepository gardenRepository,
                     [FromServices] IManagementUnitOfWork unitOfWork,
                     [FromServices] IGardenIntegrationEventPublisher integrationEventPublisher,
+                    ClaimsPrincipal user,
                     Guid gardenId,
                     CancellationToken cancellationToken) =>
                 {
+                    var currentUserId = user.GetDomainUserId();
+                    if (currentUserId is null)
+                    {
+                        return TypedResults.Unauthorized();
+                    }
+
                     var garden = await gardenRepository
                         .GetByIdAsync(new GardenId(gardenId), cancellationToken)
                         .ConfigureAwait(false);
 
-                    if (garden is null)
+                    if (garden is null || garden.UserId != currentUserId.Value)
                     {
                         return TypedResults.NotFound();
                     }
@@ -218,7 +255,6 @@ public static class ManagementGardenEndpoints
     private static GardenResponse MapToResponse(Garden garden) =>
         new(
             garden.Id.Value,
-            garden.UserId.Value,
             garden.Name,
             garden.TotalSurfaceArea.Value,
             garden.TargetHumidityLevel.Value,

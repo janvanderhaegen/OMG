@@ -8,6 +8,7 @@
     <Project Path="src/OMG.Messaging.Contracts/OMG.Messaging.Contracts.csproj" />
     <Project Path="src/OMG.Telemetrics.Domain/OMG.Telemetrics.Domain.csproj" />
     <Project Path="src/OMG.Telemetrics.Infrastructure/OMG.Telemetrics.Infrastructure.csproj" />
+    <Project Path="src/OMG.Auth.Infrastructure/OMG.Auth.Infrastructure.csproj" />
   </Folder>
   <Folder Name="/test/">
     <Project Path="test/OMG.Api.Tests/OMG.Api.Tests.csproj" />

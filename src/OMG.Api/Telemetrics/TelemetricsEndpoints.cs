@@ -1,6 +1,10 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using OMG.Api.Security;
+using OMG.Management.Domain.Abstractions;
+using OMG.Management.Domain.Gardens;
 using OMG.Telemetrics.Infrastructure;
 
 namespace OMG.Api.Telemetrics;
@@ -10,15 +14,33 @@ public static class TelemetricsEndpoints
     public static IEndpointRouteBuilder MapTelemetricsEndpoints(this IEndpointRouteBuilder endpoints)
     {
         var group = endpoints.MapGroup("/api/v1/telemetrics")
-            .WithTags("Telemetrics");
+            .WithTags("Telemetrics")
+            .RequireAuthorization();
 
         group.MapGet(
                 "gardens/{gardenId:guid}/plants",
-                async Task<IResult> (
+                async Task<Results<Ok<IReadOnlyList<PlantMetricsResponse>>, NotFound, UnauthorizedHttpResult>> (
+                    [FromServices] IGardenRepository gardenRepository,
                     [FromServices] TelemetricsDbContext db,
+                    ClaimsPrincipal user,
                     Guid gardenId,
                     CancellationToken cancellationToken) =>
                 {
+                    var currentUserId = user.GetDomainUserId();
+                    if (currentUserId is null)
+                    {
+                        return TypedResults.Unauthorized();
+                    }
+
+                    var garden = await gardenRepository
+                        .GetByIdAsync(new GardenId(gardenId), cancellationToken)
+                        .ConfigureAwait(false);
+
+                    if (garden is null || garden.UserId != currentUserId.Value)
+                    {
+                        return TypedResults.NotFound();
+                    }
+
                     var states = await db.PlantHydrationStates
                         .Where(s => s.GardenId == gardenId)
                         .ToListAsync(cancellationToken)
@@ -43,12 +65,29 @@ public static class TelemetricsEndpoints
 
         group.MapGet(
                 "gardens/{gardenId:guid}/plants/{plantId:guid}",
-                async Task<IResult> (
+                async Task<Results<Ok<PlantMetricsResponse>, NotFound, UnauthorizedHttpResult>> (
+                    [FromServices] IGardenRepository gardenRepository,
                     [FromServices] TelemetricsDbContext db,
+                    ClaimsPrincipal user,
                     Guid gardenId,
                     Guid plantId,
                     CancellationToken cancellationToken) =>
                 {
+                    var currentUserId = user.GetDomainUserId();
+                    if (currentUserId is null)
+                    {
+                        return TypedResults.Unauthorized();
+                    }
+
+                    var garden = await gardenRepository
+                        .GetByIdAsync(new GardenId(gardenId), cancellationToken)
+                        .ConfigureAwait(false);
+
+                    if (garden is null || garden.UserId != currentUserId.Value)
+                    {
+                        return TypedResults.NotFound();
+                    }
+
                     var state = await db.PlantHydrationStates
                         .FirstOrDefaultAsync(s => s.GardenId == gardenId && s.PlantId == plantId, cancellationToken)
                         .ConfigureAwait(false);
@@ -71,11 +110,28 @@ public static class TelemetricsEndpoints
 
         group.MapGet(
                 "gardens/{gardenId:guid}/irrigation/lines",
-                async Task<IResult> (
+                async Task<Results<Ok<IReadOnlyList<IrrigationLineResponse>>, NotFound, UnauthorizedHttpResult>> (
+                    [FromServices] IGardenRepository gardenRepository,
                     [FromServices] TelemetricsDbContext db,
+                    ClaimsPrincipal user,
                     Guid gardenId,
                     CancellationToken cancellationToken) =>
                 {
+                    var currentUserId = user.GetDomainUserId();
+                    if (currentUserId is null)
+                    {
+                        return TypedResults.Unauthorized();
+                    }
+
+                    var garden = await gardenRepository
+                        .GetByIdAsync(new GardenId(gardenId), cancellationToken)
+                        .ConfigureAwait(false);
+
+                    if (garden is null || garden.UserId != currentUserId.Value)
+                    {
+                        return TypedResults.NotFound();
+                    }
+
                     var states = await db.PlantHydrationStates
                         .Where(s => s.GardenId == gardenId && s.HasIrrigationLine)
                         .Select(s => new { s.PlantId, s.GardenId })
@@ -93,12 +149,29 @@ public static class TelemetricsEndpoints
 
         group.MapPost(
                 "gardens/{gardenId:guid}/irrigation/lines",
-                async Task<IResult> (
+                async Task<Results<Created<IrrigationLineResponse>, NotFound, BadRequest<string>, UnauthorizedHttpResult>> (
+                    [FromServices] IGardenRepository gardenRepository,
                     [FromServices] TelemetricsDbContext db,
+                    ClaimsPrincipal user,
                     Guid gardenId,
                     [FromBody] AttachIrrigationLineRequest request,
                     CancellationToken cancellationToken) =>
                 {
+                    var currentUserId = user.GetDomainUserId();
+                    if (currentUserId is null)
+                    {
+                        return TypedResults.Unauthorized();
+                    }
+
+                    var garden = await gardenRepository
+                        .GetByIdAsync(new GardenId(gardenId), cancellationToken)
+                        .ConfigureAwait(false);
+
+                    if (garden is null || garden.UserId != currentUserId.Value)
+                    {
+                        return TypedResults.NotFound();
+                    }
+
                     var state = await db.PlantHydrationStates
                         .FirstOrDefaultAsync(s => s.GardenId == gardenId && s.PlantId == request.PlantId, cancellationToken)
                         .ConfigureAwait(false);
@@ -121,12 +194,29 @@ public static class TelemetricsEndpoints
 
         group.MapDelete(
                 "gardens/{gardenId:guid}/irrigation/lines/{plantId:guid}",
-                async Task<IResult> (
+                async Task<Results<NoContent, NotFound, UnauthorizedHttpResult>> (
+                    [FromServices] IGardenRepository gardenRepository,
                     [FromServices] TelemetricsDbContext db,
+                    ClaimsPrincipal user,
                     Guid gardenId,
                     Guid plantId,
                     CancellationToken cancellationToken) =>
                 {
+                    var currentUserId = user.GetDomainUserId();
+                    if (currentUserId is null)
+                    {
+                        return TypedResults.Unauthorized();
+                    }
+
+                    var garden = await gardenRepository
+                        .GetByIdAsync(new GardenId(gardenId), cancellationToken)
+                        .ConfigureAwait(false);
+
+                    if (garden is null || garden.UserId != currentUserId.Value)
+                    {
+                        return TypedResults.NotFound();
+                    }
+
                     var state = await db.PlantHydrationStates
                         .FirstOrDefaultAsync(s => s.GardenId == gardenId && s.PlantId == plantId, cancellationToken)
                         .ConfigureAwait(false);

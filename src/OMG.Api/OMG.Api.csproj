@@ -17,6 +17,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.3" />
   </ItemGroup>
 
   <ItemGroup>
@@ -25,6 +26,7 @@
     <ProjectReference Include="..\OMG.Management.Infrastructure\OMG.Management.Infrastructure.csproj" />
     <ProjectReference Include="..\OMG.Messaging.Contracts\OMG.Messaging.Contracts.csproj" />
     <ProjectReference Include="..\OMG.Telemetrics.Infrastructure\OMG.Telemetrics.Infrastructure.csproj" />
+    <ProjectReference Include="..\OMG.Auth.Infrastructure\OMG.Auth.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

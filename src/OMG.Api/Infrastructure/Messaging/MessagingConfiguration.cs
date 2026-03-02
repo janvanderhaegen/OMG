@@ -1,6 +1,7 @@
 using MassTransit;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using OMG.Auth.Infrastructure.Consumers;
 using OMG.Management.Infrastructure;
 using OMG.Telemetrics.Infrastructure.Consumers;
 
@@ -24,6 +25,7 @@ public static class MessagingConfiguration
             x.AddConsumer<PlantRemovedConsumer>();
             x.AddConsumer<PlantIdealHumidityLevelChangedConsumer>();
             x.AddConsumer<PlantReclassifiedConsumer>();
+            x.AddConsumer<RegistrationEmailConsumer>();
 
             x.UsingRabbitMq((context, cfg) =>
             {

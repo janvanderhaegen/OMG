@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Configuration;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -13,6 +14,19 @@ public sealed class ManagementApiFactory : WebApplicationFactory<Program>
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Testing");
+
+        builder.ConfigureAppConfiguration((_, configBuilder) =>
+        {
+            var jwtSettings = new Dictionary<string, string?>
+            {
+                ["Jwt:Issuer"] = "OMG.TestIssuer",
+                ["Jwt:Audience"] = "OMG.TestAudience",
+                ["Jwt:Secret"] = "super-secret-test-key-1234567890-super-secret-test-key",
+                ["Jwt:AccessTokenMinutes"] = "15"
+            };
+
+            configBuilder.AddInMemoryCollection(jwtSettings!);
+        });
 
         builder.ConfigureServices(services =>
         {

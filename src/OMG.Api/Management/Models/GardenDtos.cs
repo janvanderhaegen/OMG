@@ -1,7 +1,6 @@
 namespace OMG.Api.Management.Models;
 
-public sealed record CreateGardenRequest(
-    Guid UserId,
+public sealed record CreateGardenRequest( 
     string Name,
     decimal TotalSurfaceArea,
     int TargetHumidityLevel);
@@ -12,8 +11,7 @@ public sealed record UpdateGardenRequest(
     int TargetHumidityLevel);
 
 public sealed record GardenResponse(
-    Guid Id,
-    Guid UserId,
+    Guid Id, 
     string Name,
     decimal TotalSurfaceArea,
     int TargetHumidityLevel,

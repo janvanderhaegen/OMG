@@ -1,10 +1,12 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Net.Http.Headers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using OMG.Api.Management.Models;
 using OMG.Management.Infrastructure;
 using OMG.Management.Infrastructure.Entities;
+using OMG.Api.Tests.Auth;
 
 namespace OMG.Api.Tests;
 
@@ -22,7 +24,8 @@ public class GardenManagementEndpointTests : IClassFixture<ManagementApiFactory>
     [Fact]
     public async Task GetGardensForUser_ReturnsGardens()
     {
-        var userId = Guid.NewGuid();
+        var authenticated = await AuthTestHelper.AuthenticateAsync(_factory, _client, "gardens-user@example.com");
+        var userId = authenticated.UserId;
         var gardenId = Guid.NewGuid();
 
         using (var scope = _factory.Services.CreateScope())
@@ -44,19 +47,20 @@ public class GardenManagementEndpointTests : IClassFixture<ManagementApiFactory>
             await db.SaveChangesAsync();
         }
 
-        var response = await _client.GetAsync($"/api/v1/management/gardens?userId={userId}");
+        var response = await _client.GetAsync($"/api/v1/management/gardens");
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
         var gardens = await response.Content.ReadFromJsonAsync<List<GardenResponse>>();
         Assert.NotNull(gardens);
-        Assert.Contains(gardens, g => g.Id == gardenId && g.UserId == userId);
+        Assert.Contains(gardens, g => g.Id == gardenId );
     }
 
     [Fact]
     public async Task GetGardenById_ReturnsGarden()
     {
-        var userId = Guid.NewGuid();
+        var authenticated = await AuthTestHelper.AuthenticateAsync(_factory, _client, "gardens-user2@example.com");
+        var userId = authenticated.UserId;
         var gardenId = Guid.NewGuid();
 
         using (var scope = _factory.Services.CreateScope())
@@ -84,17 +88,16 @@ public class GardenManagementEndpointTests : IClassFixture<ManagementApiFactory>
 
         var garden = await response.Content.ReadFromJsonAsync<GardenResponse>();
         Assert.NotNull(garden);
-        Assert.Equal(gardenId, garden.Id);
-        Assert.Equal(userId, garden.UserId);
+        Assert.Equal(gardenId, garden.Id); 
     }
 
     [Fact]
     public async Task CreateGarden_CreatesAndReturnsGarden()
     {
-        var userId = Guid.NewGuid();
+        var authenticated = await AuthTestHelper.AuthenticateAsync(_factory, _client, "gardens-create@example.com");
+        var userId = authenticated.UserId;
 
-        var request = new CreateGardenRequest(
-            UserId: userId,
+        var request = new CreateGardenRequest( 
             Name: "Created Garden",
             TotalSurfaceArea: 30,
             TargetHumidityLevel: 55);
@@ -104,8 +107,7 @@ public class GardenManagementEndpointTests : IClassFixture<ManagementApiFactory>
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
 
         var garden = await response.Content.ReadFromJsonAsync<GardenResponse>();
-        Assert.NotNull(garden);
-        Assert.Equal(userId, garden.UserId);
+        Assert.NotNull(garden); 
         Assert.Equal("Created Garden", garden.Name);
         Assert.Equal(30, garden.TotalSurfaceArea);
         Assert.Equal(55, garden.TargetHumidityLevel);
@@ -125,7 +127,8 @@ public class GardenManagementEndpointTests : IClassFixture<ManagementApiFactory>
     [Fact]
     public async Task UpdateGarden_UpdatesAndReturnsGarden()
     {
-        var userId = Guid.NewGuid();
+        var authenticated = await AuthTestHelper.AuthenticateAsync(_factory, _client, "gardens-update@example.com");
+        var userId = authenticated.UserId;
         var gardenId = Guid.NewGuid();
 
         using (var scope = _factory.Services.CreateScope())
@@ -176,7 +179,8 @@ public class GardenManagementEndpointTests : IClassFixture<ManagementApiFactory>
     [Fact]
     public async Task DeleteGarden_SoftDeletesGarden()
     {
-        var userId = Guid.NewGuid();
+        var authenticated = await AuthTestHelper.AuthenticateAsync(_factory, _client, "gardens-delete@example.com");
+        var userId = authenticated.UserId;
         var gardenId = Guid.NewGuid();
 
         using (var scope = _factory.Services.CreateScope())
