@@ -1,11 +1,14 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using OMG.Api.Management.Models;
 using OMG.Api.Security;
 using OMG.Management.Domain.Abstractions;
 using OMG.Management.Domain.Common;
 using OMG.Management.Domain.Gardens;
+using OMG.Management.Infrastructure;
+using OMG.Management.Infrastructure.Entities;
 using OMG.Management.Infrastructure.Messaging;
 
 namespace OMG.Api.Management;
@@ -21,7 +24,7 @@ public static class ManagementPlantEndpoints
         group.MapGet(
                 "/",
                 async Task<Results<Ok<IReadOnlyList<PlantResponse>>, NotFound, UnauthorizedHttpResult>> (
-                    [FromServices] IGardenRepository gardenRepository,
+                    [FromServices] ManagementDbContext dbContext,
                     ClaimsPrincipal user,
                     Guid gardenId,
                     CancellationToken cancellationToken) =>
@@ -32,20 +35,49 @@ public static class ManagementPlantEndpoints
                         return TypedResults.Unauthorized();
                     }
 
-                    var garden = await gardenRepository
-                        .GetByIdWithPlantsAsync(new GardenId(gardenId), cancellationToken)
+                    var garden = await dbContext.Database
+                        .SqlQueryRaw<GardenResponse>(
+                            """
+                            SELECT g.[Id],
+                                   g.[Name],
+                                   g.[TotalSurfaceArea],
+                                   g.[TargetHumidityLevel],
+                                   g.[CreatedAt],
+                                   g.[UpdatedAt]
+                            FROM [gm].[gardens] AS g
+                            WHERE g.[Deleted] = 0
+                              AND g.[UserId] = {0}
+                              AND g.[Id] = {1}
+                            """,
+                            currentUserId.Value,
+                            gardenId)
+                        .FirstOrDefaultAsync(cancellationToken)
                         .ConfigureAwait(false);
 
-                    if (garden is null || garden.UserId != currentUserId.Value)
+                    if (garden is null)
                     {
                         return TypedResults.NotFound();
                     }
 
-                    var responses = garden.Plants
-                        .Select(p => MapToResponse(garden.Id.Value, p))
-                        .ToList();
+                    var plants = await dbContext.Database
+                        .SqlQueryRaw<PlantResponse>(
+                            """
+                            SELECT p.[Id],
+                                   p.[GardenId],
+                                   p.[Name],
+                                   p.[Species],
+                                   p.[Type],
+                                   p.[PlantationDate],
+                                   p.[SurfaceAreaRequired],
+                                   p.[IdealHumidityLevel]
+                            FROM [gm].[plants] AS p
+                            WHERE p.[GardenId] = {0}
+                            """,
+                            gardenId)
+                        .ToListAsync(cancellationToken)
+                        .ConfigureAwait(false);
 
-                    return TypedResults.Ok((IReadOnlyList<PlantResponse>)responses);
+                    return TypedResults.Ok((IReadOnlyList<PlantResponse>)plants);
                 })
             .WithName("GetPlantsForGarden")
             .WithSummary("Lists all plants in the specified garden.")
@@ -54,7 +86,7 @@ public static class ManagementPlantEndpoints
         group.MapGet(
                 "/{plantId:guid}",
                 async Task<Results<Ok<PlantResponse>, NotFound, UnauthorizedHttpResult>> (
-                    [FromServices] IGardenRepository gardenRepository,
+                    [FromServices] ManagementDbContext dbContext,
                     ClaimsPrincipal user,
                     Guid gardenId,
                     Guid plantId,
@@ -66,22 +98,56 @@ public static class ManagementPlantEndpoints
                         return TypedResults.Unauthorized();
                     }
 
-                    var garden = await gardenRepository
-                        .GetByIdWithPlantsAsync(new GardenId(gardenId), cancellationToken)
+                    var garden = await dbContext.Database
+                        .SqlQueryRaw<GardenResponse>(
+                            """
+                            SELECT g.[Id],
+                                   g.[Name],
+                                   g.[TotalSurfaceArea],
+                                   g.[TargetHumidityLevel],
+                                   g.[CreatedAt],
+                                   g.[UpdatedAt]
+                            FROM [gm].[gardens] AS g
+                            WHERE g.[Deleted] = 0
+                              AND g.[UserId] = {0}
+                              AND g.[Id] = {1}
+                            """,
+                            currentUserId.Value,
+                            gardenId)
+                        .FirstOrDefaultAsync(cancellationToken)
                         .ConfigureAwait(false);
 
-                    if (garden is null || garden.UserId != currentUserId.Value)
+                    if (garden is null)
                     {
                         return TypedResults.NotFound();
                     }
 
-                    var plant = garden.Plants.FirstOrDefault(p => p.Id.Value == plantId);
+                    var plant = await dbContext.Database
+                        .SqlQueryRaw<PlantResponse>(
+                            """
+                            SELECT p.[Id],
+                                   p.[GardenId],
+                                   p.[Name],
+                                   p.[Species],
+                                   p.[Type],
+                                   p.[PlantationDate],
+                                   p.[SurfaceAreaRequired],
+                                   p.[IdealHumidityLevel]
+                            FROM [gm].[plants] AS p
+                            WHERE p.[GardenId] = {0}
+                              AND p.[Id] = {1}
+                            """,
+                            gardenId,
+                            plantId)
+                        .FirstOrDefaultAsync(cancellationToken)
+                        .ConfigureAwait(false);
+
                     if (plant is null)
                     {
                         return TypedResults.NotFound();
                     }
 
-                    return TypedResults.Ok(MapToResponse(garden.Id.Value, plant));
+                    return TypedResults.Ok(plant);
                 })
             .WithName("GetPlantById")
             .WithSummary("Gets a single plant's details.")
@@ -335,5 +401,16 @@ public static class ManagementPlantEndpoints
             plant.PlantationDate,
             plant.SurfaceAreaRequired.Value,
             plant.IdealHumidityLevel.Value);
+
+    private static PlantResponse MapToResponse(Guid gardenId, PlantEntity plant) =>
+        new(
+            plant.Id,
+            gardenId,
+            plant.Name,
+            plant.Species,
+            plant.Type,
+            plant.PlantationDate,
+            plant.SurfaceAreaRequired,
+            plant.IdealHumidityLevel);
 }
 

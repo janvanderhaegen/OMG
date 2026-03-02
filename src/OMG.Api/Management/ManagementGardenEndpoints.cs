@@ -8,6 +8,7 @@ using OMG.Management.Domain.Abstractions;
 using OMG.Management.Domain.Common;
 using OMG.Management.Domain.Gardens;
 using OMG.Management.Infrastructure;
+using OMG.Management.Infrastructure.Entities;
 using OMG.Management.Infrastructure.Messaging;
 
 namespace OMG.Api.Management;
@@ -23,7 +24,7 @@ public static class ManagementGardenEndpoints
         group.MapGet(
                 "/",
                 async Task<Results<Ok<IReadOnlyList<GardenResponse>>, UnauthorizedHttpResult>> (
-                    [FromServices] IGardenRepository gardenRepository,
+                    [FromServices] ManagementDbContext dbContext,
                     ClaimsPrincipal user,
                     CancellationToken cancellationToken) =>
                 {
@@ -33,15 +34,24 @@ public static class ManagementGardenEndpoints
                         return TypedResults.Unauthorized();
                     }
 
-                    var gardens = await gardenRepository
-                        .ListByUserAsync(currentUserId.Value, cancellationToken)
+                    var gardens = await dbContext.Database
+                        .SqlQueryRaw<GardenResponse>(
+                            """
+                            SELECT g.[Id],
+                                   g.[Name],
+                                   g.[TotalSurfaceArea],
+                                   g.[TargetHumidityLevel],
+                                   g.[CreatedAt],
+                                   g.[UpdatedAt]
+                            FROM [gm].[gardens] AS g
+                            WHERE g.[Deleted] = 0
+                              AND g.[UserId] = {0}
+                            """,
+                            currentUserId.Value)
+                        .ToListAsync(cancellationToken)
                         .ConfigureAwait(false);
 
-                    var responses = gardens
-                        .Select(MapToResponse)
-                        .ToList();
-
-                    return TypedResults.Ok((IReadOnlyList<GardenResponse>)responses);
+                    return TypedResults.Ok((IReadOnlyList<GardenResponse>)gardens);
                 })
             .WithName("GetGardensForUser")
             .WithSummary("Lists all gardens for the specified user.")
@@ -50,7 +60,7 @@ public static class ManagementGardenEndpoints
         group.MapGet(
                 "/{gardenId:guid}",
                 async Task<Results<Ok<GardenResponse>, NotFound, UnauthorizedHttpResult>> (
-                    [FromServices] IGardenRepository gardenRepository,
+                    [FromServices] ManagementDbContext dbContext,
                     ClaimsPrincipal user,
                     Guid gardenId,
                     CancellationToken cancellationToken) =>
@@ -61,16 +71,31 @@ public static class ManagementGardenEndpoints
                         return TypedResults.Unauthorized();
                     }
 
-                    var garden = await gardenRepository
-                        .GetByIdAsync(new GardenId(gardenId), cancellationToken)
+                    var garden = await dbContext.Database
+                        .SqlQueryRaw<GardenResponse>(
+                            """
+                            SELECT g.[Id],
+                                   g.[Name],
+                                   g.[TotalSurfaceArea],
+                                   g.[TargetHumidityLevel],
+                                   g.[CreatedAt],
+                                   g.[UpdatedAt]
+                            FROM [gm].[gardens] AS g
+                            WHERE g.[Deleted] = 0
+                              AND g.[UserId] = {0}
+                              AND g.[Id] = {1}
+                            """,
+                            currentUserId.Value,
+                            gardenId)
+                        .FirstOrDefaultAsync(cancellationToken)
                         .ConfigureAwait(false);
 
-                    if (garden is null || garden.UserId != currentUserId.Value)
+                    if (garden is null)
                     {
                         return TypedResults.NotFound();
                     }
 
-                    return TypedResults.Ok(MapToResponse(garden));
+                    return TypedResults.Ok(garden);
                 })
             .WithName("GetGardenById")
             .WithSummary("Gets a single garden's details.")
@@ -258,6 +283,15 @@ public static class ManagementGardenEndpoints
             garden.Name,
             garden.TotalSurfaceArea.Value,
             garden.TargetHumidityLevel.Value,
+            garden.CreatedAt,
+            garden.UpdatedAt);
+
+    private static GardenResponse MapToResponse(GardenEntity garden) =>
+        new(
+            garden.Id,
+            garden.Name,
+            garden.TotalSurfaceArea,
+            garden.TargetHumidityLevel,
             garden.CreatedAt,
             garden.UpdatedAt);
 }
