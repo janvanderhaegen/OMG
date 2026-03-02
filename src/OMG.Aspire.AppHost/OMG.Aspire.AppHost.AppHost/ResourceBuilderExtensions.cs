@@ -1,10 +1,15 @@
 ﻿using Microsoft.Extensions.Diagnostics.HealthChecks;
 using System.Diagnostics;
+using System.Xml.Linq;
 
 internal static class ResourceBuilderExtensions
 {
     extension<T>(IResourceBuilder<T> builder) where T : IResourceWithEndpoints
     {
+        internal IResourceBuilder<T> WithOpenApi()
+        {
+            return builder.WithOpenApiDocs("openapi-docs", "Open API json", "openapi/v1.json");
+        }
         internal IResourceBuilder<T> WithSwaggerUI()
         {
             return builder.WithOpenApiDocs("swagger-ui-docs", "Swagger API Documentation", "swagger");
@@ -47,5 +52,7 @@ internal static class ResourceBuilderExtensions
                 IconVariant = IconVariant.Filled,
             });
         }
+
+
     }
 }

@@ -11,6 +11,7 @@ builder.AddProject<Projects.OMG_Api>("api")
     .WithReference(rabbitMq)
     .WaitFor(postgres)
     .WaitFor(rabbitMq)
+    .WithOpenApi()
     .WithSwaggerUI()
     .WithScalar();
 
