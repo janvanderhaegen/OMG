@@ -26,6 +26,26 @@ public sealed class TelemetryIntegrationEventPublisher(IPublishEndpoint publishE
                             e.OccurredAt),
                         cancellationToken).ConfigureAwait(false);
                     break;
+                case WateringStartedDomainEvent e:
+                    await publishEndpoint.Publish(
+                        new WateringStarted(
+                            e.SessionId,
+                            e.PlantId,
+                            e.MeterId,
+                            e.StartedAt,
+                            e.OccurredAt),
+                        cancellationToken).ConfigureAwait(false);
+                    break;
+                case WateringCompletedDomainEvent e:
+                    await publishEndpoint.Publish(
+                        new WateringCompleted(
+                            e.SessionId,
+                            e.PlantId,
+                            e.MeterId,
+                            e.NewHumidityLevel,
+                            e.OccurredAt),
+                        cancellationToken).ConfigureAwait(false);
+                    break;
             }
         }
     }

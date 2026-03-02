@@ -19,6 +19,7 @@ using OMG.Management.Domain.Gardens;
 using OMG.Management.Infrastructure;
 using OMG.Management.Infrastructure.Messaging;
 using OMG.Management.Infrastructure.Repositories;
+using OMG.Telemetrics.Domain.Hydration;
 using OMG.Telemetrics.Infrastructure;
 using Scalar.AspNetCore;
 using System.Text;
@@ -148,7 +149,8 @@ builder.Services.AddScoped<IGardenIntegrationEventPublisher, GardenIntegrationEv
 builder.Services.AddScoped<IAuthIntegrationEventPublisher, AuthIntegrationEventPublisher>();
 
 builder.Services.AddScoped<ITokenService, TokenService>();
-builder.Services.AddScoped<IPlantTelemetryRepository, PlantTelemetryRepository>();
+builder.Services.AddScoped<IPlantHydrationStateRepository, PlantTelemetryRepository>();
+builder.Services.AddScoped<ITelemetryIntegrationEventPublisher, TelemetryIntegrationEventPublisher>();
 builder.Services.AddScoped<IIrrigationSystemAdapter, MockIrrigationSystemAdapter>();
 builder.Services.AddHostedService<IrrigationSimulationWorker>();
 

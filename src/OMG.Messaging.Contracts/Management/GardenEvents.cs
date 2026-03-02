@@ -106,6 +106,7 @@ public sealed record PlantMeterAttached(
     Guid GardenId,
     Guid PlantId,
     string MeterId,
+    int IdealHumidityLevel,
     DateTimeOffset OccurredAt,
     string? CorrelationId,
     string? CausationId);

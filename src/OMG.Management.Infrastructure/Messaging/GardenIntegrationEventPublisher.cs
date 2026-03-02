@@ -132,6 +132,7 @@ public sealed class GardenIntegrationEventPublisher(IPublishEndpoint publishEndp
             e.Garden.Id.Value,
             e.Plant.Id.Value,
             e.MeterId,
+            e.Plant.IdealHumidityLevel.Value,
             e.OccurredAt,
             null,
             null),

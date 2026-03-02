@@ -3,10 +3,10 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using OMG.Api.Management;
-using OMG.Management.Domain.Gardens;
 using OMG.Management.Infrastructure;
+using OMG.Telemetrics.Domain.Hydration;
 using OMG.Telemetrics.Infrastructure;
-using OMG.Telemetrics.Infrastructure.Entities;
+using PlantType = OMG.Telemetrics.Domain.Hydration.PlantType;
 
 namespace OMG.Api.Telemetrics;
 
@@ -31,42 +31,56 @@ public sealed class IrrigationSimulationWorker(
         }
     }
 
+    private static bool IsWateringFromSession(PlantHydrationState state, DateTimeOffset utcNow)
+    {
+        if (state.ActiveSession is null)
+            return false;
+        var session = state.ActiveSession;
+        var startedWithinTwoMinutes = (utcNow - session.StartedAt).TotalMinutes < 2;
+        var notEnded = utcNow < session.EndsAt;
+        return startedWithinTwoMinutes && notEnded;
+    }
+
     private async Task SimulateAsync(CancellationToken cancellationToken)
     {
         using var scope = serviceProvider.CreateScope();
 
-        var telemetryDb = scope.ServiceProvider.GetRequiredService<TelemetryDbContext>();
+        var plantRepository = scope.ServiceProvider.GetRequiredService<IPlantHydrationStateRepository>();
         var managementDb = scope.ServiceProvider.GetRequiredService<ManagementDbContext>();
+        var telemetryDb = scope.ServiceProvider.GetRequiredService<TelemetryDbContext>();
         var publishEndpoint = scope.ServiceProvider.GetRequiredService<IPublishEndpoint>();
+        var eventPublisher = scope.ServiceProvider.GetRequiredService<ITelemetryIntegrationEventPublisher>();
 
-        var plants = await telemetryDb.Plants
-            .AsNoTracking()
-            .Where(p => p.HasIrrigationLine && p.MeterId != null)
-            .ToListAsync(cancellationToken)
+        var plantsWithIrrigation = await plantRepository.ListWithIrrigationLineAsync(cancellationToken)
             .ConfigureAwait(false);
 
-        if (plants.Count == 0)
+        if (plantsWithIrrigation.Count == 0)
         {
             return;
         }
+
+        var utcNow = DateTimeOffset.UtcNow;
          
 
         var readingsByGarden = new Dictionary<Guid, List<TelemetryReadingRequest>>();
 
-        foreach (var plant in plants)
+        foreach (var (state, meterId, gardenId) in plantsWithIrrigation)
         {
-            var typed = managementDb.Plants
-                .Where(p => p.Id == plant.PlantId)  
+            if (string.IsNullOrEmpty(meterId))
+                continue;
+
+            var typed = await managementDb.Plants
+                .AsNoTracking()
+                .Where(p => p.Id == state.PlantId)
                 .Select(c => c.Type)
-                .Single();
-            var type = Enum.TryParse<PlantType>(typed, ignoreCase: true, out var parsed) ? parsed : PlantType.Vegetable;
+                .FirstOrDefaultAsync(cancellationToken)
+                .ConfigureAwait(false);
+            var type = Enum.TryParse<PlantType>(typed ?? "Vegetable", ignoreCase: true, out var parsed)
+                ? parsed
+                : PlantType.Vegetable;
 
-
-            var meterId = plant.MeterId!;
-
-            var current = plant.CurrentHumidityLevel;
-            var ideal = plant.IdealHumidityLevel;
-            var isWatering = plant.IsWatering;
+            var current = state.CurrentHumidityLevel;
+            var isWatering = IsWateringFromSession(state, utcNow);
 
             int next;
 
@@ -97,18 +111,14 @@ public sealed class IrrigationSimulationWorker(
                 next = Math.Max(0, current - decay);
             }
 
-            plant.CurrentHumidityLevel = next;
-
-            if (!readingsByGarden.TryGetValue(plant.GardenId, out var list))
+            if (!readingsByGarden.TryGetValue(gardenId, out var list))
             {
                 list = [];
-                readingsByGarden[plant.GardenId] = list;
+                readingsByGarden[gardenId] = list;
             }
 
-            list.Add(new TelemetryReadingRequest(meterId, plant.CurrentHumidityLevel, plant.IsWatering));
+            list.Add(new TelemetryReadingRequest(meterId, next, isWatering));
         }
-
-        await telemetryDb.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         foreach (var (gardenId, readings) in readingsByGarden)
         {
@@ -125,6 +135,8 @@ public sealed class IrrigationSimulationWorker(
             var validationErrors = await TelemetryEndpoints.ProcessReadingsForGardenAsync(
                     managementDb,
                     telemetryDb,
+                    plantRepository,
+                    eventPublisher,
                     new PublishingUnitOfWork(managementDb),
                     publishEndpoint,
                     garden,

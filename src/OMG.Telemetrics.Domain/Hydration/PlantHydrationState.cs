@@ -109,30 +109,17 @@ public sealed class PlantHydrationState : AggregateRoot
             activeSession);
     }
 
-    public void ApplyMinuteTick(DateTimeOffset utcNow)
+    public Result RegisterCurrentHumidity(int currentHumidityLevel)
     {
-        if (!IsWatering)
+        if (currentHumidityLevel is < 0 or > 100)
         {
-            var decay = PlantType switch
-            {
-                PlantType.Vegetable => HydrationConstants.VegetableDecayPerMinute,
-                PlantType.Fruit => HydrationConstants.FruitDecayPerMinute,
-                PlantType.Flower => HydrationConstants.FlowerDecayPerMinute,
-                _ => HydrationConstants.VegetableDecayPerMinute
-            };
-
-            CurrentHumidityLevel = Math.Max(0, CurrentHumidityLevel - decay);
-
-            if (CurrentHumidityLevel < IdealHumidityLevel)
-            {
-                RaiseDomainEvent(new PlantNeedsWateringDomainEvent(
-                    PlantId,
-                    MeterId,
-                    CurrentHumidityLevel,
-                    IdealHumidityLevel,
-                    utcNow));
-            }
+            return Result.Failure(
+                ErrorCodes.HydrationValidationFailed,
+                "Current humidity level must be between 0 and 100.");
         }
+
+        CurrentHumidityLevel = currentHumidityLevel;
+        return Result.Success();
     }
 
     public Result StartWatering(DateTimeOffset utcNow)
@@ -175,6 +162,43 @@ public sealed class PlantHydrationState : AggregateRoot
             return Result.Failure(
                 ErrorCodes.HydrationValidationFailed,
                 "Watering session is not yet due to complete.");
+        }
+
+        var increase = PlantType switch
+        {
+            PlantType.Vegetable => HydrationConstants.VegetableWateringIncrease,
+            PlantType.Fruit => HydrationConstants.FruitWateringIncrease,
+            PlantType.Flower => HydrationConstants.FlowerWateringIncrease,
+            _ => HydrationConstants.VegetableWateringIncrease
+        };
+
+        CurrentHumidityLevel = Math.Min(100, CurrentHumidityLevel + increase);
+
+        IsWatering = false;
+        LastIrrigationEnd = utcNow;
+
+        var session = ActiveSession;
+        ActiveSession = null;
+
+        RaiseDomainEvent(new WateringCompletedDomainEvent(
+            session.SessionId,
+            PlantId,
+            MeterId,
+            CurrentHumidityLevel,
+            utcNow));
+
+        return Result.Success();
+    }
+
+    /// <summary>
+    /// Completes the current watering session (e.g. when hardware reports watering stopped).
+    /// Allows early completion even when utcNow &lt; ActiveSession.EndsAt.
+    /// </summary>
+    public Result StopWatering(DateTimeOffset utcNow)
+    {
+        if (ActiveSession is null)
+        {
+            return Result.Success();
         }
 
         var increase = PlantType switch

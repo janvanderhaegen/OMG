@@ -44,59 +44,8 @@ public class PlantHydrationStateTests
         Assert.Contains("idealHumidityLevel", result.Error!.ValidationErrors!.Keys, StringComparer.OrdinalIgnoreCase);
     }
 
-    [Theory]
-    [InlineData(PlantType.Vegetable, 1)]
-    [InlineData(PlantType.Fruit, 3)]
-    [InlineData(PlantType.Flower, 4)]
-    public void ApplyMinuteTick_Reduces_Humidity_By_Type_Decay(PlantType plantType, int expectedDecay)
-    {
-        var state = PlantHydrationState.InitializeFromPlantAdded(
-            Guid.NewGuid(),
-            Guid.NewGuid().ToString(),
-            plantType,
-            idealHumidityLevel: 80).Value!;
-
-        var before = state.CurrentHumidityLevel;
-        state.ApplyMinuteTick(DateTimeOffset.UtcNow);
-        Assert.Equal(before - expectedDecay, state.CurrentHumidityLevel);
-    }
-
     [Fact]
-    public void ApplyMinuteTick_Does_Not_Reduce_Below_Zero()
-    {
-        var state = PlantHydrationState.InitializeFromPlantAdded(
-            Guid.NewGuid(),
-            Guid.NewGuid().ToString(),
-            PlantType.Flower, // 4% per minute
-            idealHumidityLevel: 5).Value!;
-
-        for (var i = 0; i < 20; i++)
-            state.ApplyMinuteTick(DateTimeOffset.UtcNow.AddMinutes(i));
-
-        Assert.True(state.CurrentHumidityLevel >= 0);
-    }
-
-    [Fact]
-    public void ApplyMinuteTick_Raises_PlantNeedsWatering_When_Below_Ideal_And_Not_Watering()
-    {
-        var state = PlantHydrationState.InitializeFromPlantAdded(
-            Guid.NewGuid(),
-            Guid.NewGuid().ToString(),
-            PlantType.Vegetable,
-            idealHumidityLevel: 55).Value!;
-         
-        state.ApplyMinuteTick(DateTimeOffset.UtcNow);
-
-        var evt = Assert.Single(state.DomainEvents);
-        var needsWatering = Assert.IsType<PlantNeedsWateringDomainEvent>(evt);
-        Assert.Equal(state.PlantId, needsWatering.PlantId);
-        Assert.Equal(state.MeterId, needsWatering.MeterId);
-        Assert.Equal(49, needsWatering.CurrentHumidityLevel);
-        Assert.Equal(55, needsWatering.IdealHumidityLevel);
-    }
-
-    [Fact]
-    public void ApplyMinuteTick_Does_Not_Raise_Event_When_Already_Watering()
+    public void RegisterCurrentHumidity_Updates_Level_When_Valid()
     {
         var state = PlantHydrationState.InitializeFromPlantAdded(
             Guid.NewGuid(),
@@ -104,12 +53,64 @@ public class PlantHydrationStateTests
             PlantType.Vegetable,
             idealHumidityLevel: 60).Value!;
 
-        state.StartWatering(DateTimeOffset.UtcNow);
+        var result = state.RegisterCurrentHumidity(75);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(75, state.CurrentHumidityLevel);
+    }
+
+    [Theory]
+    [InlineData(-1)]
+    [InlineData(101)]
+    public void RegisterCurrentHumidity_Fails_When_Out_Of_Range(int value)
+    {
+        var state = PlantHydrationState.InitializeFromPlantAdded(
+            Guid.NewGuid(),
+            Guid.NewGuid().ToString(),
+            PlantType.Vegetable,
+            idealHumidityLevel: 60).Value!;
+
+        var result = state.RegisterCurrentHumidity(value);
+
+        Assert.True(result.IsFailure);
+    }
+
+    [Fact]
+    public void StopWatering_Completes_Session_And_Raises_Event()
+    {
+        var now = DateTimeOffset.UtcNow;
+        var state = PlantHydrationState.InitializeFromPlantAdded(
+            Guid.NewGuid(),
+            Guid.NewGuid().ToString(),
+            PlantType.Vegetable,
+            idealHumidityLevel: 60).Value!;
+
+        state.StartWatering(now);
         state.ClearDomainEvents();
 
-        state.ApplyMinuteTick(DateTimeOffset.UtcNow);
+        var result = state.StopWatering(now.AddMinutes(1));
 
-        Assert.True(state.IsWatering);
+        Assert.True(result.IsSuccess);
+        Assert.False(state.IsWatering);
+        Assert.Null(state.ActiveSession);
+        Assert.Equal(50 + 16, state.CurrentHumidityLevel);
+        var evt = Assert.Single(state.DomainEvents);
+        Assert.IsType<WateringCompletedDomainEvent>(evt);
+    }
+
+    [Fact]
+    public void StopWatering_NoOp_When_No_Active_Session()
+    {
+        var state = PlantHydrationState.InitializeFromPlantAdded(
+            Guid.NewGuid(),
+            Guid.NewGuid().ToString(),
+            PlantType.Vegetable,
+            idealHumidityLevel: 60).Value!;
+
+        var result = state.StopWatering(DateTimeOffset.UtcNow);
+
+        Assert.True(result.IsSuccess);
+        Assert.False(state.IsWatering);
         Assert.Empty(state.DomainEvents);
     }
 

@@ -6,6 +6,7 @@ using OMG.Management.Domain.Abstractions;
 using OMG.Management.Infrastructure;
 using OMG.Management.Infrastructure.Entities;
 using OMG.Messaging.Contracts.Telemetry;
+using OMG.Telemetrics.Domain.Hydration;
 using OMG.Telemetrics.Infrastructure;
 
 namespace OMG.Api.Telemetrics;
@@ -24,6 +25,8 @@ public static class TelemetryEndpoints
                 async Task<Results<Ok, ValidationProblem, UnauthorizedHttpResult, NotFound>> (
                     [FromServices] ManagementDbContext managementDbContext,
                     [FromServices] TelemetryDbContext telemetryDbContext,
+                    [FromServices] IPlantHydrationStateRepository plantRepository,
+                    [FromServices] ITelemetryIntegrationEventPublisher eventPublisher,
                     [FromServices] IPublishEndpoint publishEndpoint,
                     [FromServices] IPublishUnitOfWork unitOfWork,
                     HttpRequest httpRequest,
@@ -51,6 +54,8 @@ public static class TelemetryEndpoints
                     var validationErrors = await ProcessReadingsForGardenAsync(
                         managementDbContext,
                         telemetryDbContext,
+                        plantRepository,
+                        eventPublisher,
                         unitOfWork,
                         publishEndpoint,
                         garden,
@@ -74,6 +79,8 @@ public static class TelemetryEndpoints
     internal static async Task<Dictionary<string, string[]>?> ProcessReadingsForGardenAsync(
         ManagementDbContext managementDbContext,
         TelemetryDbContext telemetryDbContext,
+        IPlantHydrationStateRepository plantRepository,
+        ITelemetryIntegrationEventPublisher eventPublisher,
         IPublishUnitOfWork unitOfWork,
         IPublishEndpoint publishEndpoint,
         GardenEntity garden,
@@ -101,12 +108,12 @@ public static class TelemetryEndpoints
         }
 
         var now = DateTimeOffset.UtcNow;
+        var domainEventsToPublish = new List<object>();
 
         foreach (var reading in readings)
         {
             var meterId = reading.MeterId!.Trim();
 
-            // Find the management plant for this meter.
             var managementPlant = await managementDbContext.Plants
                 .AsNoTracking()
                 .FirstOrDefaultAsync(
@@ -119,61 +126,92 @@ public static class TelemetryEndpoints
                 continue;
             }
 
-            var telemetryPlant = await telemetryDbContext.Plants
-                .FirstOrDefaultAsync(
-                    p => p.GardenId == garden.Id && p.MeterId == meterId,
-                    cancellationToken)
+            var plantType = Enum.TryParse<PlantType>(managementPlant.Type, ignoreCase: true, out var parsed)
+                ? parsed
+                : PlantType.Vegetable;
+
+            var state = await plantRepository.GetByMeterIdAsync(garden.Id, meterId, cancellationToken)
                 .ConfigureAwait(false);
 
-            if (telemetryPlant is null)
+            var isNew = false;
+            if (state is null)
             {
-                telemetryPlant = new OMG.Telemetrics.Infrastructure.Entities.TelemetryPlantEntity
-                {
-                    PlantId = managementPlant.Id,
-                    GardenId = garden.Id,
-                    MeterId = meterId,
-                    IdealHumidityLevel = managementPlant.IdealHumidityLevel,
-                    CurrentHumidityLevel = reading.CurrentHumidity,
-                    IsWatering = reading.IsWatering,
-                    HasIrrigationLine = true,
-                    LastTelemetryAt = now
-                };
+                var createResult = PlantHydrationState.InitializeFromPlantAdded(
+                    managementPlant.Id,
+                    meterId,
+                    plantType,
+                    managementPlant.IdealHumidityLevel);
 
-                await telemetryDbContext.Plants.AddAsync(telemetryPlant, cancellationToken)
-                    .ConfigureAwait(false);
+                if (createResult.IsFailure)
+                {
+                    if (createResult.Error!.ValidationErrors is { } errs)
+                    {
+                        foreach (var (key, messages) in errs)
+                        {
+                            validationErrors[key] = [.. (validationErrors.GetValueOrDefault(key) ?? Array.Empty<string>()), .. messages];
+                        }
+                    }
+                    continue;
+                }
+
+                state = createResult.Value!;
+                state.AttachIrrigationLine();
+                isNew = true;
+            }
+
+            var registerResult = state.RegisterCurrentHumidity(reading.CurrentHumidity);
+            if (registerResult.IsFailure)
+            {
+                if (registerResult.Error!.ValidationErrors is { } errs)
+                {
+                    foreach (var (key, messages) in errs)
+                    {
+                        validationErrors[key] = [.. (validationErrors.GetValueOrDefault(key) ?? Array.Empty<string>()), .. messages];
+                    }
+                }
+                continue;
+            }
+
+            if (!state.IsWatering && state.CurrentHumidityLevel < state.IdealHumidityLevel)
+            {
+                var startResult = state.StartWatering(now);
+                if (startResult.IsFailure)
+                {
+                    if (startResult.Error!.ValidationErrors is { } errs)
+                    {
+                        foreach (var (key, messages) in errs)
+                        {
+                            validationErrors[key] = [.. (validationErrors.GetValueOrDefault(key) ?? Array.Empty<string>()), .. messages];
+                        }
+                    }
+                    continue;
+                }
+            }
+            else if (state.IsWatering && reading.IsWatering == false)
+            {
+                state.StopWatering(now);
+            }
+
+            if (isNew)
+            {
+                await plantRepository.AddAsync(state, meterId, garden.Id, cancellationToken).ConfigureAwait(false);
             }
             else
             {
-                telemetryPlant.CurrentHumidityLevel = reading.CurrentHumidity;
-                telemetryPlant.IsWatering = reading.IsWatering;
-                telemetryPlant.LastTelemetryAt = now;
+                await plantRepository.SaveAsync(state, meterId, garden.Id, cancellationToken).ConfigureAwait(false);
             }
 
-            if (telemetryPlant.CurrentHumidityLevel < telemetryPlant.IdealHumidityLevel)
-            {
-                await publishEndpoint.Publish(
-                    new WateringNeeded(
-                        managementPlant.MeterId!,
-                        telemetryPlant.CurrentHumidityLevel,
-                        telemetryPlant.IdealHumidityLevel,
-                        now),
-                    cancellationToken).ConfigureAwait(false);
-                await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-            }
-            else if (telemetryPlant.CurrentHumidityLevel > telemetryPlant.IdealHumidityLevel)
-            {
-                await publishEndpoint.Publish(
-                    new HydrationSatisfied(
-                        managementPlant.MeterId!,
-                        telemetryPlant.CurrentHumidityLevel,
-                        telemetryPlant.IdealHumidityLevel,
-                        now),
-                    cancellationToken).ConfigureAwait(false);
-                await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-            }
+            domainEventsToPublish.AddRange(state.DomainEvents);
+            state.ClearDomainEvents();
         }
 
         await telemetryDbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+        if (domainEventsToPublish.Count > 0)
+        {
+            await eventPublisher.PublishAsync(domainEventsToPublish, cancellationToken).ConfigureAwait(false);
+            await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        }
 
         return null;
     }
