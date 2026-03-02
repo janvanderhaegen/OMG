@@ -12,6 +12,8 @@ public class PlantEntity
 
     public string Type { get; set; } = string.Empty;
 
+    public string? MeterId { get; set; }
+
     public DateTimeOffset PlantationDate { get; set; }
 
     public decimal SurfaceAreaRequired { get; set; }

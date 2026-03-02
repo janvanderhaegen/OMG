@@ -13,6 +13,7 @@ public sealed class Garden : AggregateRoot
         string name,
         SurfaceArea totalSurfaceArea,
         HumidityLevel targetHumidityLevel,
+        string telemetryApiKey,
         DateTimeOffset createdAt,
         DateTimeOffset updatedAt,
         bool isDeleted,
@@ -24,6 +25,7 @@ public sealed class Garden : AggregateRoot
         Name = name;
         TotalSurfaceArea = totalSurfaceArea;
         TargetHumidityLevel = targetHumidityLevel;
+        TelemetryApiKey = telemetryApiKey;
         CreatedAt = createdAt;
         UpdatedAt = updatedAt;
         IsDeleted = isDeleted;
@@ -41,6 +43,8 @@ public sealed class Garden : AggregateRoot
 
     public HumidityLevel TargetHumidityLevel { get; private set; }
 
+    public string TelemetryApiKey { get; private set; }
+
     public DateTimeOffset CreatedAt { get; }
 
     public DateTimeOffset UpdatedAt { get; private set; }
@@ -57,6 +61,7 @@ public sealed class Garden : AggregateRoot
         string name,
         decimal totalSurfaceArea,
         int targetHumidityLevel,
+        string telemetryApiKey,
         DateTimeOffset createdAt,
         DateTimeOffset updatedAt,
         bool deleted,
@@ -69,6 +74,7 @@ public sealed class Garden : AggregateRoot
             name,
             new SurfaceArea(totalSurfaceArea),
             new HumidityLevel(targetHumidityLevel),
+            telemetryApiKey,
             createdAt,
             updatedAt,
             deleted,
@@ -108,12 +114,15 @@ public sealed class Garden : AggregateRoot
                 validationErrors);
         }
 
+        var telemetryApiKey = Guid.NewGuid().ToString("N");
+
         var garden = new Garden(
             GardenId.New(),
             userId,
             name.Trim(),
             new SurfaceArea(totalSurfaceArea),
             new HumidityLevel(targetHumidityLevel),
+            telemetryApiKey,
             utcNow,
             utcNow,
             isDeleted: false,
@@ -275,7 +284,8 @@ public sealed class Garden : AggregateRoot
             type,
             plantationDate,
             new SurfaceArea(surfaceAreaRequired),
-            new HumidityLevel(idealHumidityLevel));
+            new HumidityLevel(idealHumidityLevel),
+            meterId: null);
 
         _plants.Add(plant);
         UpdatedAt = utcNow;
@@ -428,6 +438,66 @@ public sealed class Garden : AggregateRoot
         UpdatedAt = utcNow;
 
         RaiseDomainEvent(new PlantRemovedFromGardenDomainEvent(this, plant, utcNow));
+
+        return Result.Success();
+    }
+
+    public Result UpdatePlantMeter(PlantId plantId, string? meterId, DateTimeOffset utcNow)
+    {
+        var plant = _plants.FirstOrDefault(p => p.Id == plantId);
+        if (plant is null)
+        {
+            return Result.Success();
+        }
+
+        var trimmedMeterId = meterId?.Trim();
+
+        if (trimmedMeterId is { Length: 0 })
+        {
+            return Result.Failure(
+                ErrorCodes.PlantValidationFailed,
+                "One or more validation errors occurred while updating a plant's meter.",
+                new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["meterId"] = ["MeterId cannot be empty when provided."]
+                });
+        }
+
+        var existing = plant.MeterId;
+
+        // No change
+        if (string.Equals(existing, trimmedMeterId, StringComparison.Ordinal))
+        {
+            return Result.Success();
+        }
+
+        // Attach new meter
+        if (existing is null && trimmedMeterId is not null)
+        {
+            plant.MeterId = trimmedMeterId;
+            UpdatedAt = utcNow;
+            RaiseDomainEvent(new PlantMeterAttachedDomainEvent(this, plant, trimmedMeterId, utcNow));
+            return Result.Success();
+        }
+
+        // Detach existing meter
+        if (existing is not null && trimmedMeterId is null)
+        {
+            plant.MeterId = null;
+            UpdatedAt = utcNow;
+            RaiseDomainEvent(new PlantMeterDetachedDomainEvent(this, plant, existing, utcNow));
+            return Result.Success();
+        }
+
+        // Change from one meter to another: detach old, attach new
+        if (existing is not null && trimmedMeterId is not null)
+        {
+            plant.MeterId = trimmedMeterId;
+            UpdatedAt = utcNow;
+            RaiseDomainEvent(new PlantMeterDetachedDomainEvent(this, plant, existing, utcNow));
+            RaiseDomainEvent(new PlantMeterAttachedDomainEvent(this, plant, trimmedMeterId, utcNow));
+            return Result.Success();
+        }
 
         return Result.Success();
     }

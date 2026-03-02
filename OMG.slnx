@@ -7,9 +7,12 @@
     <Project Path="src/OMG.Management.Infrastructure/OMG.Management.Infrastructure.csproj" />
     <Project Path="src/OMG.Messaging.Contracts/OMG.Messaging.Contracts.csproj" />
     <Project Path="src/OMG.Auth.Infrastructure/OMG.Auth.Infrastructure.csproj" />
+    <Project Path="src/OMG.Telemetrics.Domain/OMG.Telemetrics.Domain.csproj" />
+    <Project Path="src/OMG.Telemetrics.Infrastructure/OMG.Telemetrics.Infrastructure.csproj" />
   </Folder>
   <Folder Name="/test/">
     <Project Path="test/OMG.Api.Tests/OMG.Api.Tests.csproj" />
     <Project Path="test/OMG.Management.Domain.Tests/OMG.Management.Domain.Tests.csproj" />
+    <Project Path="test/OMG.Telemetrics.Domain.Tests/OMG.Telemetrics.Domain.Tests.csproj" />
   </Folder>
 </Solution>

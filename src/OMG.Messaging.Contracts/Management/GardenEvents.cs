@@ -102,3 +102,19 @@ public sealed record PlantPlantationDateChanged(
     string? CorrelationId,
     string? CausationId);
 
+public sealed record PlantMeterAttached(
+    Guid GardenId,
+    Guid PlantId,
+    string MeterId,
+    DateTimeOffset OccurredAt,
+    string? CorrelationId,
+    string? CausationId);
+
+public sealed record PlantMeterDetached(
+    Guid GardenId,
+    Guid PlantId,
+    string MeterId,
+    DateTimeOffset OccurredAt,
+    string? CorrelationId,
+    string? CausationId);
+

@@ -56,7 +56,8 @@ public static class ManagementPlantEndpoints
                                    p."Type",
                                    p."PlantationDate",
                                    p."SurfaceAreaRequired",
-                                   p."IdealHumidityLevel"
+                                   p."IdealHumidityLevel",
+                                   p."MeterId"
                             FROM "gm"."plants" AS p
                             WHERE p."GardenId" = {0}
                             """,
@@ -106,7 +107,8 @@ public static class ManagementPlantEndpoints
                                    p."Type",
                                    p."PlantationDate",
                                    p."SurfaceAreaRequired",
-                                   p."IdealHumidityLevel"
+                                   p."IdealHumidityLevel",
+                                   p."MeterId"
                             FROM "gm"."plants" AS p
                             WHERE p."GardenId" = {0}
                               AND p."Id" = {1}
@@ -131,7 +133,7 @@ public static class ManagementPlantEndpoints
                 "/",
                 async Task<Results<Created<PlantResponse>, NotFound, ValidationProblem, UnauthorizedHttpResult>> (
                     [FromServices] IGardenRepository gardenRepository,
-                    [FromServices] IManagementUnitOfWork unitOfWork,
+                    [FromServices] IPublishUnitOfWork unitOfWork,
                     [FromServices] IGardenIntegrationEventPublisher integrationEventPublisher,
                     ClaimsPrincipal user,
                     Guid gardenId,
@@ -206,7 +208,7 @@ public static class ManagementPlantEndpoints
                 "/{plantId:guid}",
                 async Task<Results<Ok<PlantResponse>, NotFound, ValidationProblem, UnauthorizedHttpResult>> (
                     [FromServices] IGardenRepository gardenRepository,
-                    [FromServices] IManagementUnitOfWork unitOfWork,
+                    [FromServices] IPublishUnitOfWork unitOfWork,
                     [FromServices] IGardenIntegrationEventPublisher integrationEventPublisher,
                     ClaimsPrincipal user,
                     Guid gardenId,
@@ -304,6 +306,16 @@ public static class ManagementPlantEndpoints
                         if (result.IsFailure)
                             return CreateValidationProblem(result.Error!);
                     }
+                     
+                    if (request.MeterId is not null || request.RemoveMeterId == true)
+                    {
+                        var desiredMeterId = request.RemoveMeterId == true ? null : request.MeterId;
+                        var result = garden.UpdatePlantMeter(plantIdDomain, desiredMeterId, utcNow);
+                        if (result.IsFailure)
+                        {
+                            return CreateValidationProblem(result.Error!);
+                        }
+                    }
 
                     await gardenRepository.SaveAsync(garden, cancellationToken).ConfigureAwait(false);
                     await integrationEventPublisher
@@ -323,7 +335,7 @@ public static class ManagementPlantEndpoints
                 "/{plantId:guid}",
                 async Task<Results<NoContent, NotFound, UnauthorizedHttpResult>> (
                     [FromServices] IGardenRepository gardenRepository,
-                    [FromServices] IManagementUnitOfWork unitOfWork,
+                    [FromServices] IPublishUnitOfWork unitOfWork,
                     [FromServices] IGardenIntegrationEventPublisher integrationEventPublisher,
                     ClaimsPrincipal user,
                     Guid gardenId,
@@ -389,7 +401,8 @@ public static class ManagementPlantEndpoints
             plant.Type.ToString(),
             plant.PlantationDate,
             plant.SurfaceAreaRequired.Value,
-            plant.IdealHumidityLevel.Value);
+            plant.IdealHumidityLevel.Value,
+            plant.MeterId);
 
     private static PlantResponse MapToResponse(Guid gardenId, PlantEntity plant) =>
         new(
@@ -400,6 +413,7 @@ public static class ManagementPlantEndpoints
             plant.Type,
             plant.PlantationDate,
             plant.SurfaceAreaRequired,
-            plant.IdealHumidityLevel);
+            plant.IdealHumidityLevel,
+            plant.MeterId);
 }
 

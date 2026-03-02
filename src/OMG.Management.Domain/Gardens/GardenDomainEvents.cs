@@ -24,3 +24,7 @@ public sealed record PlantPlantationDateChangedDomainEvent(Garden Garden, Plant 
 
 public sealed record PlantRemovedFromGardenDomainEvent(Garden Garden, Plant Plant, DateTimeOffset OccurredAt) : IGardenDomainEvent;
 
+public sealed record PlantMeterAttachedDomainEvent(Garden Garden, Plant Plant, string MeterId, DateTimeOffset OccurredAt) : IGardenDomainEvent;
+
+public sealed record PlantMeterDetachedDomainEvent(Garden Garden, Plant Plant, string MeterId, DateTimeOffset OccurredAt) : IGardenDomainEvent;
+

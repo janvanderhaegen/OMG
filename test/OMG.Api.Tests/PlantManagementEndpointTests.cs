@@ -150,7 +150,8 @@ public class PlantManagementEndpointTests : IClassFixture<ManagementApiFactory>
             Type: "Vegetable",
             PlantationDate: DateTimeOffset.UtcNow.Date,
             SurfaceAreaRequired: 5,
-            IdealHumidityLevel: 60);
+            IdealHumidityLevel: 60,
+            MeterId: null);
 
         var response = await _client.PostAsJsonAsync($"/api/v1/management/gardens/{gardenId}/plants", request);
 
@@ -211,7 +212,8 @@ public class PlantManagementEndpointTests : IClassFixture<ManagementApiFactory>
             Type: "Vegetable",
             PlantationDate: DateTimeOffset.UtcNow.Date,
             SurfaceAreaRequired: 6,
-            IdealHumidityLevel: 60);
+            IdealHumidityLevel: 60,
+            MeterId: null);
 
         var response = await _client.PostAsJsonAsync($"/api/v1/management/gardens/{gardenId}/plants", request);
 
@@ -267,7 +269,9 @@ public class PlantManagementEndpointTests : IClassFixture<ManagementApiFactory>
             Type: "Fruit",
             PlantationDate: DateTimeOffset.UtcNow.Date.AddDays(-1),
             SurfaceAreaRequired: 6,
-            IdealHumidityLevel: 65);
+            IdealHumidityLevel: 65,
+            MeterId: null,
+            RemoveMeterId: null);
 
         var response = await _client.PutAsJsonAsync($"/api/v1/management/gardens/{gardenId}/plants/{plantId}", request);
 

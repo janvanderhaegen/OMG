@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
@@ -26,6 +26,8 @@
     <ProjectReference Include="..\OMG.Management.Infrastructure\OMG.Management.Infrastructure.csproj" />
     <ProjectReference Include="..\OMG.Messaging.Contracts\OMG.Messaging.Contracts.csproj" />
     <ProjectReference Include="..\OMG.Auth.Infrastructure\OMG.Auth.Infrastructure.csproj" />
+    <ProjectReference Include="..\OMG.Telemetrics.Domain\OMG.Telemetrics.Domain.csproj" />
+    <ProjectReference Include="..\OMG.Telemetrics.Infrastructure\OMG.Telemetrics.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

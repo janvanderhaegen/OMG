@@ -8,18 +8,18 @@ public class PlantHydrationStateTests
     public void InitializeFromPlantAdded_Succeeds_With_50_Percent_Humidity()
     {
         var plantId = Guid.NewGuid();
-        var gardenId = Guid.NewGuid();
+        var meterId = Guid.NewGuid().ToString();
 
         var result = PlantHydrationState.InitializeFromPlantAdded(
             plantId,
-            gardenId,
+            meterId,
             PlantType.Vegetable,
             idealHumidityLevel: 60);
 
         Assert.True(result.IsSuccess);
         var state = result.Value!;
         Assert.Equal(plantId, state.PlantId);
-        Assert.Equal(gardenId, state.GardenId);
+        Assert.Equal(meterId, state.MeterId);
         Assert.Equal(PlantType.Vegetable, state.PlantType);
         Assert.Equal(60, state.IdealHumidityLevel);
         Assert.Equal(HydrationConstants.InitialHumidityPercent, state.CurrentHumidityLevel);
@@ -36,7 +36,7 @@ public class PlantHydrationStateTests
     {
         var result = PlantHydrationState.InitializeFromPlantAdded(
             Guid.NewGuid(),
-            Guid.NewGuid(),
+            Guid.NewGuid().ToString(),
             PlantType.Vegetable,
             idealHumidity);
 
@@ -52,7 +52,7 @@ public class PlantHydrationStateTests
     {
         var state = PlantHydrationState.InitializeFromPlantAdded(
             Guid.NewGuid(),
-            Guid.NewGuid(),
+            Guid.NewGuid().ToString(),
             plantType,
             idealHumidityLevel: 80).Value!;
 
@@ -66,7 +66,7 @@ public class PlantHydrationStateTests
     {
         var state = PlantHydrationState.InitializeFromPlantAdded(
             Guid.NewGuid(),
-            Guid.NewGuid(),
+            Guid.NewGuid().ToString(),
             PlantType.Flower, // 4% per minute
             idealHumidityLevel: 5).Value!;
 
@@ -81,7 +81,7 @@ public class PlantHydrationStateTests
     {
         var state = PlantHydrationState.InitializeFromPlantAdded(
             Guid.NewGuid(),
-            Guid.NewGuid(),
+            Guid.NewGuid().ToString(),
             PlantType.Vegetable,
             idealHumidityLevel: 55).Value!;
          
@@ -90,7 +90,7 @@ public class PlantHydrationStateTests
         var evt = Assert.Single(state.DomainEvents);
         var needsWatering = Assert.IsType<PlantNeedsWateringDomainEvent>(evt);
         Assert.Equal(state.PlantId, needsWatering.PlantId);
-        Assert.Equal(state.GardenId, needsWatering.GardenId);
+        Assert.Equal(state.MeterId, needsWatering.MeterId);
         Assert.Equal(49, needsWatering.CurrentHumidityLevel);
         Assert.Equal(55, needsWatering.IdealHumidityLevel);
     }
@@ -100,7 +100,7 @@ public class PlantHydrationStateTests
     {
         var state = PlantHydrationState.InitializeFromPlantAdded(
             Guid.NewGuid(),
-            Guid.NewGuid(),
+            Guid.NewGuid().ToString(),
             PlantType.Vegetable,
             idealHumidityLevel: 60).Value!;
 
@@ -119,7 +119,7 @@ public class PlantHydrationStateTests
         var now = DateTimeOffset.UtcNow;
         var state = PlantHydrationState.InitializeFromPlantAdded(
             Guid.NewGuid(),
-            Guid.NewGuid(),
+            Guid.NewGuid().ToString(),
             PlantType.Vegetable,
             idealHumidityLevel: 60).Value!;
 
@@ -144,7 +144,7 @@ public class PlantHydrationStateTests
     {
         var state = PlantHydrationState.InitializeFromPlantAdded(
             Guid.NewGuid(),
-            Guid.NewGuid(),
+            Guid.NewGuid().ToString(),
             PlantType.Vegetable,
             idealHumidityLevel: 60).Value!;
 
@@ -161,7 +161,7 @@ public class PlantHydrationStateTests
         var now = DateTimeOffset.UtcNow;
         var state = PlantHydrationState.InitializeFromPlantAdded(
             Guid.NewGuid(),
-            Guid.NewGuid(),
+            Guid.NewGuid().ToString(),
             PlantType.Vegetable, // +16%
             idealHumidityLevel: 60).Value!;
 
@@ -196,7 +196,7 @@ public class PlantHydrationStateTests
         var now = DateTimeOffset.UtcNow;
         var state = PlantHydrationState.InitializeFromPlantAdded(
             Guid.NewGuid(),
-            Guid.NewGuid(),
+            Guid.NewGuid().ToString(),
             plantType,
             idealHumidityLevel: 50).Value!;
 
@@ -215,7 +215,7 @@ public class PlantHydrationStateTests
         var now = DateTimeOffset.UtcNow;
         var state = PlantHydrationState.FromPersistence(
             Guid.NewGuid(),
-            Guid.NewGuid(),
+            Guid.NewGuid().ToString(),
             PlantType.Flower,
             idealHumidityLevel: 50,
             currentHumidityLevel: 95,
@@ -239,7 +239,7 @@ public class PlantHydrationStateTests
     {
         var state = PlantHydrationState.InitializeFromPlantAdded(
             Guid.NewGuid(),
-            Guid.NewGuid(),
+            Guid.NewGuid().ToString(),
             PlantType.Vegetable,
             idealHumidityLevel: 60).Value!;
 
@@ -254,7 +254,7 @@ public class PlantHydrationStateTests
         var now = DateTimeOffset.UtcNow;
         var state = PlantHydrationState.InitializeFromPlantAdded(
             Guid.NewGuid(),
-            Guid.NewGuid(),
+            Guid.NewGuid().ToString(),
             PlantType.Vegetable,
             idealHumidityLevel: 60).Value!;
 
@@ -270,7 +270,7 @@ public class PlantHydrationStateTests
     {
         var state = PlantHydrationState.InitializeFromPlantAdded(
             Guid.NewGuid(),
-            Guid.NewGuid(),
+            Guid.NewGuid().ToString(),
             PlantType.Vegetable,
             idealHumidityLevel: 60).Value!;
 
@@ -286,7 +286,7 @@ public class PlantHydrationStateTests
     {
         var state = PlantHydrationState.InitializeFromPlantAdded(
             Guid.NewGuid(),
-            Guid.NewGuid(),
+            Guid.NewGuid().ToString(),
             PlantType.Vegetable,
             idealHumidityLevel: 60).Value!;
 
@@ -299,7 +299,7 @@ public class PlantHydrationStateTests
     {
         var state = PlantHydrationState.InitializeFromPlantAdded(
             Guid.NewGuid(),
-            Guid.NewGuid(),
+            Guid.NewGuid().ToString(),
             PlantType.Vegetable,
             idealHumidityLevel: 60).Value!;
 

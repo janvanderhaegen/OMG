@@ -34,6 +34,10 @@ public class ManagementDbContext(DbContextOptions<ManagementDbContext> options) 
         garden.Property(x => x.TargetHumidityLevel)
             .IsRequired();
 
+        garden.Property(x => x.TelemetryApiKey)
+            .IsRequired()
+            .HasMaxLength(100);
+
         garden.Property(x => x.CreatedAt)
             .IsRequired();
 
@@ -86,6 +90,9 @@ public class ManagementDbContext(DbContextOptions<ManagementDbContext> options) 
 
         plant.Property(x => x.IdealHumidityLevel)
             .IsRequired();
+
+        plant.Property(x => x.MeterId)
+            .HasMaxLength(100);
 
         plant.HasIndex(x => x.GardenId);
 

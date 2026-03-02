@@ -6,7 +6,8 @@ public sealed record CreatePlantRequest(
     string Type,
     DateTimeOffset PlantationDate,
     decimal SurfaceAreaRequired,
-    int IdealHumidityLevel);
+    int IdealHumidityLevel,
+    string? MeterId);
 
 public sealed record UpdatePlantRequest(
     string? Name,
@@ -14,7 +15,9 @@ public sealed record UpdatePlantRequest(
     string? Type,
     DateTimeOffset? PlantationDate,
     decimal? SurfaceAreaRequired,
-    int? IdealHumidityLevel);
+    int? IdealHumidityLevel,
+    string? MeterId,
+    bool? RemoveMeterId);
 
 public sealed record PlantResponse(
     Guid Id,
@@ -24,5 +27,6 @@ public sealed record PlantResponse(
     string Type,
     DateTimeOffset PlantationDate,
     decimal SurfaceAreaRequired,
-    int IdealHumidityLevel);
+    int IdealHumidityLevel,
+    string? MeterId);
 

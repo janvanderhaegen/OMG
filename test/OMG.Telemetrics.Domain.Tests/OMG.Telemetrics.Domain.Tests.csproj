@@ -18,4 +18,8 @@
     <Using Include="Xunit" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\\..\\src\\OMG.Telemetrics.Domain\\OMG.Telemetrics.Domain.csproj" />
+  </ItemGroup>
+
 </Project>

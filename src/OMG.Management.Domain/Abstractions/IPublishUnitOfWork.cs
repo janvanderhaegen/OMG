@@ -1,6 +1,6 @@
 namespace OMG.Management.Domain.Abstractions;
 
-public interface IManagementUnitOfWork
+public interface IPublishUnitOfWork
 {
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

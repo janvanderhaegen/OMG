@@ -25,7 +25,7 @@ public static class AuthEndpoints
                 async Task<Results<Created<RegisterResponse>, ValidationProblem>> (
                     [FromServices] UserManager<ApplicationUser> userManager,
                     [FromServices] IAuthIntegrationEventPublisher authIntegrationEventPublisher,
-                    [FromServices] IManagementUnitOfWork unitOfWork,
+                    [FromServices] IPublishUnitOfWork unitOfWork,
                     [FromBody] RegisterRequest request,
                     CancellationToken cancellationToken) =>
                 {
@@ -232,7 +232,7 @@ public static class AuthEndpoints
                 async Task<Results<NoContent, StatusCodeHttpResult, ValidationProblem>> (
                     [FromServices] UserManager<ApplicationUser> userManager,
                     [FromServices] IAuthIntegrationEventPublisher authIntegrationEventPublisher,
-                    [FromServices] IManagementUnitOfWork unitOfWork,
+                    [FromServices] IPublishUnitOfWork unitOfWork,
                     [FromBody] ResendVerificationEmailRequest request,
                     CancellationToken cancellationToken) =>
                 {
@@ -288,7 +288,7 @@ public static class AuthEndpoints
                     [FromServices] UserManager<ApplicationUser> userManager,
                     [FromServices] ITokenService tokenService,
                     [FromServices] IAuthIntegrationEventPublisher authIntegrationEventPublisher,
-                    [FromServices] IManagementUnitOfWork unitOfWork,
+                    [FromServices] IPublishUnitOfWork unitOfWork,
                     ClaimsPrincipal user,
                     HttpContext httpContext,
                     CancellationToken cancellationToken) =>

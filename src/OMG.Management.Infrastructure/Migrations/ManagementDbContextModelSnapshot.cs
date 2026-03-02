@@ -17,7 +17,7 @@ namespace OMG.Management.Infrastructure.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.0")
+                .HasAnnotation("ProductVersion", "10.0.3")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -217,6 +217,11 @@ namespace OMG.Management.Infrastructure.Migrations
                     b.Property<int>("TargetHumidityLevel")
                         .HasColumnType("integer");
 
+                    b.Property<string>("TelemetryApiKey")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
                     b.Property<decimal>("TotalSurfaceArea")
                         .HasColumnType("numeric");
 
@@ -242,6 +247,10 @@ namespace OMG.Management.Infrastructure.Migrations
 
                     b.Property<int>("IdealHumidityLevel")
                         .HasColumnType("integer");
+
+                    b.Property<string>("MeterId")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
 
                     b.Property<string>("Name")
                         .IsRequired()

@@ -128,6 +128,20 @@ public sealed class GardenIntegrationEventPublisher(IPublishEndpoint publishEndp
             e.OccurredAt,
             null,
             null),
+        PlantMeterAttachedDomainEvent e => new PlantMeterAttached(
+            e.Garden.Id.Value,
+            e.Plant.Id.Value,
+            e.MeterId,
+            e.OccurredAt,
+            null,
+            null),
+        PlantMeterDetachedDomainEvent e => new PlantMeterDetached(
+            e.Garden.Id.Value,
+            e.Plant.Id.Value,
+            e.MeterId,
+            e.OccurredAt,
+            null,
+            null),
         _ => null
     };
 }

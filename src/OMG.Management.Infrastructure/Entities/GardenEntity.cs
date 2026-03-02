@@ -12,6 +12,8 @@ public class GardenEntity
 
     public int TargetHumidityLevel { get; set; }
 
+    public string TelemetryApiKey { get; set; } = string.Empty;
+
     public DateTimeOffset CreatedAt { get; set; }
 
     public DateTimeOffset UpdatedAt { get; set; }

@@ -16,13 +16,13 @@ public sealed class UserRemovedConsumer : IConsumer<UserRemoved>
 {
     private readonly IGardenRepository _gardenRepository;
     private readonly IGardenIntegrationEventPublisher _integrationEventPublisher;
-    private readonly IManagementUnitOfWork _unitOfWork;
+    private readonly IPublishUnitOfWork _unitOfWork;
     private readonly ILogger<UserRemovedConsumer> _logger;
 
     public UserRemovedConsumer(
         IGardenRepository gardenRepository,
         IGardenIntegrationEventPublisher integrationEventPublisher,
-        IManagementUnitOfWork unitOfWork,
+        IPublishUnitOfWork unitOfWork,
         ILogger<UserRemovedConsumer> logger)
     {
         _gardenRepository = gardenRepository;

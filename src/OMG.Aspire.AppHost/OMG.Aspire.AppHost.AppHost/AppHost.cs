@@ -3,7 +3,7 @@ using Aspire.Hosting;
 var builder = DistributedApplication.CreateBuilder(args);
 
 var postgres = builder.AddPostgres("postgres")
-    .WithDataVolume("postgres_data");
+    .WithDataVolume("postgres_data1213111");
 
 var rabbitMq = builder.AddRabbitMQ("rabbitmq");
 builder.AddProject<Projects.OMG_Api>("api")

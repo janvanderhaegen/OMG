@@ -102,6 +102,7 @@ public sealed class GardenRepository(ManagementDbContext dbContext) : IGardenRep
                 plantEntity.PlantationDate = plant.PlantationDate;
                 plantEntity.SurfaceAreaRequired = plant.SurfaceAreaRequired.Value;
                 plantEntity.IdealHumidityLevel = plant.IdealHumidityLevel.Value;
+                plantEntity.MeterId = plant.MeterId;
             }
             else
             {
@@ -139,6 +140,7 @@ public sealed class GardenRepository(ManagementDbContext dbContext) : IGardenRep
             entity.Name,
             entity.TotalSurfaceArea,
             entity.TargetHumidityLevel,
+            entity.TelemetryApiKey,
             entity.CreatedAt,
             entity.UpdatedAt,
             entity.Deleted,
@@ -158,7 +160,8 @@ public sealed class GardenRepository(ManagementDbContext dbContext) : IGardenRep
             type,
             entity.PlantationDate,
             new SurfaceArea(entity.SurfaceAreaRequired),
-            new HumidityLevel(entity.IdealHumidityLevel));
+            new HumidityLevel(entity.IdealHumidityLevel),
+            entity.MeterId);
     }
 
     private static GardenEntity MapToEntity(Garden garden)
@@ -170,6 +173,7 @@ public sealed class GardenRepository(ManagementDbContext dbContext) : IGardenRep
             Name = garden.Name,
             TotalSurfaceArea = garden.TotalSurfaceArea.Value,
             TargetHumidityLevel = garden.TargetHumidityLevel.Value,
+            TelemetryApiKey = garden.TelemetryApiKey,
             CreatedAt = garden.CreatedAt,
             UpdatedAt = garden.UpdatedAt,
             Deleted = garden.IsDeleted,
@@ -195,7 +199,8 @@ public sealed class GardenRepository(ManagementDbContext dbContext) : IGardenRep
             Type = plant.Type.ToString(),
             PlantationDate = plant.PlantationDate,
             SurfaceAreaRequired = plant.SurfaceAreaRequired.Value,
-            IdealHumidityLevel = plant.IdealHumidityLevel.Value
+            IdealHumidityLevel = plant.IdealHumidityLevel.Value,
+            MeterId = plant.MeterId
         };
     }
 }

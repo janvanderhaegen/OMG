@@ -105,7 +105,7 @@ public static class ManagementGardenEndpoints
                 "/",
                 async Task<Results<Created<GardenResponse>, ValidationProblem, UnauthorizedHttpResult>> (
                     [FromServices] IGardenRepository gardenRepository,
-                    [FromServices] IManagementUnitOfWork unitOfWork,
+                    [FromServices] IPublishUnitOfWork unitOfWork,
                     [FromServices] IGardenIntegrationEventPublisher integrationEventPublisher,
                     ClaimsPrincipal user,
                     [FromBody] CreateGardenRequest request,
@@ -152,7 +152,7 @@ public static class ManagementGardenEndpoints
                 "/{gardenId:guid}",
                 async Task<Results<Ok<GardenResponse>, NotFound, ValidationProblem, UnauthorizedHttpResult>> (
                     [FromServices] IGardenRepository gardenRepository,
-                    [FromServices] IManagementUnitOfWork unitOfWork,
+                    [FromServices] IPublishUnitOfWork unitOfWork,
                     [FromServices] IGardenIntegrationEventPublisher integrationEventPublisher,
                     ClaimsPrincipal user,
                     Guid gardenId,
@@ -235,7 +235,7 @@ public static class ManagementGardenEndpoints
                 "/{gardenId:guid}",
                 async Task<Results<NoContent, NotFound, UnauthorizedHttpResult>> (
                     [FromServices] IGardenRepository gardenRepository,
-                    [FromServices] IManagementUnitOfWork unitOfWork,
+                    [FromServices] IPublishUnitOfWork unitOfWork,
                     [FromServices] IGardenIntegrationEventPublisher integrationEventPublisher,
                     ClaimsPrincipal user,
                     Guid gardenId,

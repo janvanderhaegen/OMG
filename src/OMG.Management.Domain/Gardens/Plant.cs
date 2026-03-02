@@ -25,7 +25,8 @@ public sealed class Plant
         PlantType type,
         DateTimeOffset plantationDate,
         SurfaceArea surfaceAreaRequired,
-        HumidityLevel idealHumidityLevel)
+        HumidityLevel idealHumidityLevel,
+        string? meterId)
     {
         Id = id;
         Name = name;
@@ -34,6 +35,7 @@ public sealed class Plant
         PlantationDate = plantationDate;
         SurfaceAreaRequired = surfaceAreaRequired;
         IdealHumidityLevel = idealHumidityLevel;
+        MeterId = meterId;
     }
 
     public PlantId Id { get; }
@@ -49,6 +51,8 @@ public sealed class Plant
     public SurfaceArea SurfaceAreaRequired { get; internal set; }
 
     public HumidityLevel IdealHumidityLevel { get; internal set; }
+
+    public string? MeterId { get; internal set; }
 
     internal static Result<Plant> Create(
         string name,
@@ -95,7 +99,8 @@ public sealed class Plant
             type,
             plantationDate,
             new SurfaceArea(surfaceAreaRequired),
-            new HumidityLevel(idealHumidityLevel));
+            new HumidityLevel(idealHumidityLevel),
+            meterId: null);
 
         return Result<Plant>.Success(plant);
     }
