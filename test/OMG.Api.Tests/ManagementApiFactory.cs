@@ -56,6 +56,8 @@ public sealed class ManagementApiFactory : WebApplicationFactory<Program>
     {
         public List<SendRegistrationEmail> PublishedMessages { get; } = new();
 
+        public List<UserRemoved> UserRemovedMessages { get; } = new();
+
         public Task PublishRegistrationEmailAsync(
             Guid userId,
             string email,
@@ -63,6 +65,16 @@ public sealed class ManagementApiFactory : WebApplicationFactory<Program>
             CancellationToken cancellationToken = default)
         {
             PublishedMessages.Add(new SendRegistrationEmail(userId, email, verificationCode));
+            return Task.CompletedTask;
+        }
+
+        public Task PublishUserRemovedAsync(
+            Guid userId,
+            DateTimeOffset occurredAt,
+            string? reason,
+            CancellationToken cancellationToken = default)
+        {
+            UserRemovedMessages.Add(new UserRemoved(userId, occurredAt, reason));
             return Task.CompletedTask;
         }
     }

@@ -7,10 +7,6 @@ using OMG.Api.Security;
 using OMG.Auth.Infrastructure.Entities;
 using OMG.Auth.Infrastructure.Services;
 using OMG.Auth.Infrastructure.Messaging;
-using OMG.Management.Domain.Abstractions;
-using OMG.Management.Domain.Gardens;
-using OMG.Management.Infrastructure.Messaging;
-using OMG.Management.Domain.Common;
 
 namespace OMG.Api.Auth;
 
@@ -185,9 +181,7 @@ public static class AuthEndpoints
                 async Task<Results<NoContent, UnauthorizedHttpResult>> (
                     [FromServices] UserManager<ApplicationUser> userManager,
                     [FromServices] ITokenService tokenService,
-                    [FromServices] IGardenRepository gardenRepository,
-                    [FromServices] IManagementUnitOfWork unitOfWork,
-                    [FromServices] IGardenIntegrationEventPublisher integrationEventPublisher,
+                    [FromServices] IAuthIntegrationEventPublisher authIntegrationEventPublisher,
                     ClaimsPrincipal user,
                     HttpContext httpContext,
                     CancellationToken cancellationToken) =>
@@ -203,41 +197,48 @@ public static class AuthEndpoints
                     {
                         return TypedResults.NoContent();
                     }
-
+                    
                     var now = DateTimeOffset.UtcNow;
+
+                    var anonymizedToken = Guid.NewGuid().ToString("N");
+                    var anonymizedEmail = $"deleted_{anonymizedToken}@example.invalid";
+                    var normalizedEmail = anonymizedEmail.ToUpperInvariant();
+
+                    authUser.Email = anonymizedEmail;
+                    authUser.NormalizedEmail = normalizedEmail;
+                    authUser.UserName = anonymizedEmail;
+                    authUser.NormalizedUserName = normalizedEmail;
+                    authUser.PhoneNumber = null;
+                    authUser.PhoneNumberConfirmed = false;
+                    authUser.IsEmailVerified = false;
+                    authUser.EmailConfirmed = false;
+                    authUser.VerificationCode = null;
+                    authUser.VerificationCodeExpiresAt = null;
 
                     authUser.IsDeleted = true;
                     authUser.DeletedAt = now;
 
                     await userManager.UpdateAsync(authUser).ConfigureAwait(false);
 
-                    var domainUserId = new UserId(userId.Value);
-
-                    var gardens = await gardenRepository
-                        .ListByUserAsync(domainUserId, cancellationToken)
+                    await authIntegrationEventPublisher
+                        .PublishUserRemovedAsync(
+                            userId.Value,
+                            now,
+                            "Account deleted by user",
+                            cancellationToken)
                         .ConfigureAwait(false);
-
-                    foreach (var garden in gardens)
-                    {
-                        garden.MarkDeleted(now);
-                        gardenRepository.Remove(garden);
-                        await integrationEventPublisher
-                            .PublishIntegrationEventsAsync(garden.DomainEvents, cancellationToken)
-                            .ConfigureAwait(false);
-                    }
-
-                    await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
                     var ipAddress = httpContext.Connection.RemoteIpAddress?.ToString();
                     await tokenService
                         .RevokeAllRefreshTokensAsync(userId.Value, ipAddress, "Account deleted", cancellationToken)
                         .ConfigureAwait(false);
+                    await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
                     return TypedResults.NoContent();
                 })
             .WithName("DeleteAccount")
             .WithSummary("Deletes the current user's account and associated gardens.")
-            .WithDescription("Marks the user account as deleted, soft-deletes all gardens owned by the user, and revokes refresh tokens.")
+            .WithDescription("Marks the user account as deleted, anonymizes personal data, publishes a user-removed event, and revokes refresh tokens.")
             .RequireAuthorization();
 
         return endpoints;

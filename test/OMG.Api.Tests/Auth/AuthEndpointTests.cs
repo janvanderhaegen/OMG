@@ -156,30 +156,11 @@ public class AuthEndpointTests : IClassFixture<ManagementApiFactory>
     }
 
     [Fact]
-    public async Task DeleteAccount_SoftDeletes_Gardens_And_Revokes_Tokens()
+    public async Task DeleteAccount_Anonymizes_User_And_Revokes_Tokens_And_Publishes_UserRemoved()
     {
-        var authenticated = await AuthTestHelper.AuthenticateAsync(_factory, _client, "delete-account@example.com");
+        var email = "delete-account@example.com";
+        var authenticated = await AuthTestHelper.AuthenticateAsync(_factory, _client, email);
         var userId = authenticated.UserId;
-        var gardenId = Guid.NewGuid();
-
-        using (var scope = _factory.Services.CreateScope())
-        {
-            var managementDb = scope.ServiceProvider.GetRequiredService<ManagementDbContext>();
-
-            managementDb.Gardens.Add(new GardenEntity
-            {
-                Id = gardenId,
-                UserId = userId,
-                Name = "To be deleted",
-                TotalSurfaceArea = 10,
-                TargetHumidityLevel = 50,
-                CreatedAt = DateTimeOffset.UtcNow,
-                UpdatedAt = DateTimeOffset.UtcNow,
-                Deleted = false
-            });
-
-            await managementDb.SaveChangesAsync();
-        }
 
         var response = await _client.DeleteAsync("/api/v1/auth/account");
 
@@ -188,7 +169,6 @@ public class AuthEndpointTests : IClassFixture<ManagementApiFactory>
         using (var scope = _factory.Services.CreateScope())
         {
             var authDb = scope.ServiceProvider.GetRequiredService<AuthDbContext>();
-            var managementDb = scope.ServiceProvider.GetRequiredService<ManagementDbContext>();
 
             var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
             var user = await userManager.FindByIdAsync(userId.ToString());
@@ -196,16 +176,14 @@ public class AuthEndpointTests : IClassFixture<ManagementApiFactory>
             Assert.True(user!.IsDeleted);
             Assert.NotNull(user.DeletedAt);
 
-            var visibleGarden = await managementDb.Gardens.SingleOrDefaultAsync(g => g.Id == gardenId);
-            Assert.Null(visibleGarden);
-
-            var allGarden = await managementDb.Gardens
-                .IgnoreQueryFilters()
-                .SingleOrDefaultAsync(g => g.Id == gardenId);
-
-            Assert.NotNull(allGarden);
-            Assert.True(allGarden!.Deleted);
-            Assert.NotNull(allGarden.DeletedAt);
+            // Anonymization: email/username should no longer match the original email
+            Assert.NotEqual(email, user.Email);
+            Assert.NotEqual(email, user.UserName);
+            Assert.False(user.EmailConfirmed);
+            Assert.False(user.IsEmailVerified);
+            Assert.Null(user.PhoneNumber);
+            Assert.Null(user.VerificationCode);
+            Assert.Null(user.VerificationCodeExpiresAt);
 
             var tokens = await authDb.RefreshTokens
                 .Where(t => t.UserId == userId)
@@ -213,6 +191,13 @@ public class AuthEndpointTests : IClassFixture<ManagementApiFactory>
 
             Assert.All(tokens, t => Assert.NotNull(t.RevokedAt));
         }
+
+        // Ensure a UserRemoved integration message was published
+        var userRemovedMessages = _factory.AuthIntegrationEventPublisher.UserRemovedMessages;
+        Assert.Single(userRemovedMessages);
+        var message = userRemovedMessages.Single();
+        Assert.Equal(userId, message.UserId);
+        Assert.NotEqual(default, message.OccurredAt);
     }
 }
 
