@@ -141,6 +141,10 @@ The AppHost orchestrates:
   - Swagger and Scalar are available as custom commands
 - PostgreSQL
 - RabbitMQ
+
+
+### Users
+Seeded database with users `bram@inthepocket.com` and `jonas@inthepocket.com`, password `HireMe123!`. 
  
 
 
