@@ -27,7 +27,7 @@ public sealed class IrrigationSimulationWorker(
                 logger.LogError(ex, "Error while running irrigation simulation.");
             }
 
-            await Task.Delay(TimeSpan.FromSeconds(10), stoppingToken).ConfigureAwait(false);
+            await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken).ConfigureAwait(false);
         }
     }
 
