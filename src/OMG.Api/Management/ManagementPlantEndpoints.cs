@@ -137,11 +137,10 @@ public static class ManagementPlantEndpoints
                         SurfaceAreaRequired = plant.SurfaceAreaRequired.Value,
                         IdealHumidityLevel = plant.IdealHumidityLevel.Value
                     });
-                    await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-
                     await integrationEventPublisher
                         .PublishIntegrationEventsAsync(garden.DomainEvents, cancellationToken)
                         .ConfigureAwait(false);
+                    await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
                     var response = MapToResponse(garden.Id.Value, plant);
 
@@ -248,11 +247,10 @@ public static class ManagementPlantEndpoints
                     plantEntity.SurfaceAreaRequired = plant.SurfaceAreaRequired.Value;
                     plantEntity.IdealHumidityLevel = plant.IdealHumidityLevel.Value;
 
-                    await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-
                     await integrationEventPublisher
                         .PublishIntegrationEventsAsync(garden.DomainEvents, cancellationToken)
                         .ConfigureAwait(false);
+                    await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
                     var response = MapToResponse(garden.Id.Value, plant);
 
@@ -308,11 +306,10 @@ public static class ManagementPlantEndpoints
                     }
 
                     dbContext.Plants.Remove(plantEntity);
-                    await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-
                     await integrationEventPublisher
                         .PublishIntegrationEventsAsync(garden.DomainEvents, cancellationToken)
                         .ConfigureAwait(false);
+                    await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
                     return TypedResults.NoContent();
                 })

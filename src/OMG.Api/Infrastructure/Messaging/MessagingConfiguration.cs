@@ -1,6 +1,8 @@
 using MassTransit;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using OMG.Management.Infrastructure;
+using OMG.Telemetrics.Infrastructure.Consumers;
 
 namespace OMG.Api.Infrastructure.Messaging;
 
@@ -11,6 +13,17 @@ public static class MessagingConfiguration
         services.AddMassTransit(x =>
         {
             x.SetKebabCaseEndpointNameFormatter();
+
+            x.AddEntityFrameworkOutbox<ManagementDbContext>(o =>
+            {
+                o.UsePostgres();
+                o.UseBusOutbox();
+            });
+
+            x.AddConsumer<PlantAddedConsumer>();
+            x.AddConsumer<PlantRemovedConsumer>();
+            x.AddConsumer<PlantIdealHumidityLevelChangedConsumer>();
+            x.AddConsumer<PlantReclassifiedConsumer>();
 
             x.UsingRabbitMq((context, cfg) =>
             {

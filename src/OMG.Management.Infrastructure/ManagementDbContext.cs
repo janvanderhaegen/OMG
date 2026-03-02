@@ -1,3 +1,4 @@
+using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using OMG.Management.Infrastructure.Entities;
 
@@ -87,6 +88,10 @@ public class ManagementDbContext(DbContextOptions<ManagementDbContext> options) 
             .IsRequired();
 
         plant.HasIndex(x => x.GardenId);
+
+        modelBuilder.AddInboxStateEntity();
+        modelBuilder.AddOutboxMessageEntity();
+        modelBuilder.AddOutboxStateEntity();
     }
 }
 

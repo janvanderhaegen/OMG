@@ -1,5 +1,6 @@
 using Scalar.AspNetCore;
 using OMG.Api.Infrastructure.Messaging;
+using OMG.Api.Telemetrics;
 using OMG.Management.Infrastructure;
 using OMG.Management.Infrastructure.Messaging;
 using Microsoft.EntityFrameworkCore;
@@ -7,6 +8,7 @@ using OMG.Api.Management;
 using OMG.Management.Domain.Abstractions;
 using OMG.Management.Domain.Gardens;
 using OMG.Management.Infrastructure.Repositories;
+using OMG.Telemetrics.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -28,26 +30,49 @@ builder.Services.AddDbContext<ManagementDbContext>(options =>
     }
 });
 
+builder.Services.AddDbContext<TelemetricsDbContext>(options =>
+{
+    if (builder.Environment.IsEnvironment("Testing"))
+    {
+        options.UseInMemoryDatabase("TelemetricsTests");
+    }
+    else
+    {
+        var connectionString = builder.Configuration.GetConnectionString("postgres")
+                              ?? throw new InvalidOperationException("Postgres connection string 'postgres' is not configured.");
+        options.UseNpgsql(connectionString);
+    }
+});
+
 builder.Services.AddScoped<IGardenRepository, GardenRepository>();
 builder.Services.AddScoped<IManagementUnitOfWork, ManagementUnitOfWork>();
 
 builder.Services.AddScoped<IGardenIntegrationEventPublisher, GardenIntegrationEventPublisher>();
 
+builder.Services.AddScoped<IMockIrrigationSystemAdapter, MockIrrigationSystemAdapter>();
+builder.Services.AddHostedService<IrrigationSimulationWorker>();
+
 builder.Services.AddMessaging(builder.Configuration);
 
 var app = builder.Build();
 
-// In development, ensure the management database schema exists (migrations if available, otherwise create).
+// In development, ensure the management and telemetrics database schemas exist.
 if (app.Environment.IsDevelopment())
 {
     using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<ManagementDbContext>();
     db.Database.EnsureCreated();
-    var migrations = db.Database.GetMigrations();
     if (db.Database.GetMigrations().Any())
     {
         db.Database.Migrate();
-    } 
+    }
+
+    var teleDb = scope.ServiceProvider.GetRequiredService<TelemetricsDbContext>();
+    teleDb.Database.EnsureCreated();
+    if (teleDb.Database.GetMigrations().Any())
+    {
+        teleDb.Database.Migrate();
+    }
 }
 
 app.MapOpenApi();
@@ -60,6 +85,7 @@ app.MapScalarApiReference();
 app.MapHealthEndpoints();
 app.MapManagementGardenEndpoints();
 app.MapManagementPlantEndpoints();
+app.MapTelemetricsEndpoints();
 
 app.Run();
 

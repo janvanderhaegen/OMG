@@ -12,8 +12,8 @@
     <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="10.1.4" />
     <PackageReference Include="MassTransit" Version="9.0.1" />
     <PackageReference Include="MassTransit.RabbitMQ" Version="9.0.1" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="9.0.0" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.0">
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
@@ -24,6 +24,7 @@
     <ProjectReference Include="..\OMG.Management.Domain\OMG.Management.Domain.csproj" />
     <ProjectReference Include="..\OMG.Management.Infrastructure\OMG.Management.Infrastructure.csproj" />
     <ProjectReference Include="..\OMG.Messaging.Contracts\OMG.Messaging.Contracts.csproj" />
+    <ProjectReference Include="..\OMG.Telemetrics.Infrastructure\OMG.Telemetrics.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

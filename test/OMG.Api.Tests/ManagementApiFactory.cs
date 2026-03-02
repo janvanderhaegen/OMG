@@ -19,11 +19,9 @@ public sealed class ManagementApiFactory : WebApplicationFactory<Program>
             // Override integration event publisher with no-op implementation
             services.AddSingleton<IGardenIntegrationEventPublisher, NoOpGardenIntegrationEventPublisher>();
 
-            // Optionally remove MassTransit hosted services if present
+            // Remove MassTransit and app hosted services to avoid background work during tests
             var hostedServices = services
-                .Where(d => d.ServiceType == typeof(IHostedService) &&
-                            d.ImplementationType?.Namespace is not null &&
-                            d.ImplementationType.Namespace.Contains("MassTransit", StringComparison.Ordinal))
+                .Where(d => d.ServiceType == typeof(IHostedService))
                 .ToList();
 
             foreach (var descriptor in hostedServices)
