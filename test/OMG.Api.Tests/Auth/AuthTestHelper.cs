@@ -31,8 +31,7 @@ internal static class AuthTestHelper
             {
                 UserName = email,
                 Email = email,
-                EmailConfirmed = true,
-                IsEmailVerified = true
+                EmailConfirmed = true
             };
 
             var result = await userManager.CreateAsync(user, DefaultPassword).ConfigureAwait(false);
@@ -42,9 +41,8 @@ internal static class AuthTestHelper
                 throw new InvalidOperationException($"Failed to create test user '{email}': {errorDescriptions}");
             }
         }
-        else if (!user.IsEmailVerified)
+        else if (!user.EmailConfirmed)
         {
-            user.IsEmailVerified = true;
             user.EmailConfirmed = true;
             await userManager.UpdateAsync(user).ConfigureAwait(false);
         }

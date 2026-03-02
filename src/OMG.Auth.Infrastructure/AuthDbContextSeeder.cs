@@ -60,8 +60,7 @@ public static class AuthDbContextSeeder
             {
                 UserName = email,
                 Email = email,
-                EmailConfirmed = isVerified,
-                IsEmailVerified = isVerified
+                EmailConfirmed = isVerified
             };
 
             var result = await userManager.CreateAsync(user, DefaultDemoPassword).ConfigureAwait(false);
@@ -71,9 +70,8 @@ public static class AuthDbContextSeeder
                 throw new InvalidOperationException($"Failed to create demo user '{email}': {errorDescriptions}");
             }
         }
-        else if (isVerified && !user.IsEmailVerified)
+        else if (isVerified && !user.EmailConfirmed)
         {
-            user.IsEmailVerified = true;
             user.EmailConfirmed = true;
             await userManager.UpdateAsync(user).ConfigureAwait(false);
         }

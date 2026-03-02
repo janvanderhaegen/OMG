@@ -45,11 +45,9 @@ public class AuthEndpointTests : IClassFixture<ManagementApiFactory>
 
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
 
-
         var user = await db.Set<ApplicationUser>().SingleOrDefaultAsync(u => u.Email == email);
         Assert.NotNull(user);
-        Assert.False(user!.IsEmailVerified);
-        Assert.False(user.EmailConfirmed);
+        Assert.False(user!.EmailConfirmed);
         Assert.NotNull(user.VerificationCode);
 
         var publishedMessages = _factory.AuthIntegrationEventPublisher.PublishedMessages;
@@ -59,6 +57,145 @@ public class AuthEndpointTests : IClassFixture<ManagementApiFactory>
         Assert.Equal(user.Id, message.UserId);
         Assert.Equal(email, message.Email);
         Assert.Equal(user.VerificationCode, message.VerificationCode);
+    }
+
+    [Fact]
+    public async Task VerifyEmail_With_Valid_Code_Marks_User_As_Verified()
+    {
+        var email = "verifyme@example.com";
+        var code = "123456";
+
+        Guid userId;
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+
+            var user = new ApplicationUser
+            {
+                UserName = email,
+                Email = email,
+                EmailConfirmed = false,
+                VerificationCode = code,
+                VerificationCodeExpiresAt = DateTimeOffset.UtcNow.AddMinutes(30)
+            };
+
+            var result = await userManager.CreateAsync(user, "StrongPass123!");
+            Assert.True(result.Succeeded);
+            userId = user.Id;
+        }
+
+        var response = await _client.GetAsync($"/api/v1/auth/verify-email?code={code}");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AuthDbContext>();
+            var updatedUser = await db.Set<ApplicationUser>().SingleAsync(u => u.Id == userId);
+            Assert.True(updatedUser.EmailConfirmed);
+            Assert.Null(updatedUser.VerificationCode);
+            Assert.Null(updatedUser.VerificationCodeExpiresAt);
+        }
+    }
+
+    [Fact]
+    public async Task VerifyEmail_With_Invalid_Code_Returns_ValidationProblem()
+    {
+        var response = await _client.GetAsync("/api/v1/auth/verify-email?code=does-not-exist");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task VerifyEmail_With_Expired_Code_Returns_ValidationProblem()
+    {
+        var email = "expired@example.com";
+        var code = "654321";
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+
+            var user = new ApplicationUser
+            {
+                UserName = email,
+                Email = email,
+                EmailConfirmed = false,
+                VerificationCode = code,
+                VerificationCodeExpiresAt = DateTimeOffset.UtcNow.AddMinutes(-1)
+            };
+
+            var result = await userManager.CreateAsync(user, "StrongPass123!");
+            Assert.True(result.Succeeded);
+        }
+
+        var response = await _client.GetAsync($"/api/v1/auth/verify-email?code={code}");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task ResendVerificationEmail_Allows_Resend_For_Unverified_User()
+    {
+        var email = "resend@example.com";
+
+        Guid userId;
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+
+            var user = new ApplicationUser
+            {
+                UserName = email,
+                Email = email,
+                EmailConfirmed = false
+            };
+
+            var result = await userManager.CreateAsync(user, "StrongPass123!");
+            Assert.True(result.Succeeded);
+            userId = user.Id;
+        }
+
+        var request = new ResendVerificationEmailRequest(email);
+        var response = await _client.PostAsJsonAsync("/api/v1/auth/resend-verification-email", request);
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AuthDbContext>();
+            var updatedUser = await db.Set<ApplicationUser>().SingleAsync(u => u.Id == userId);
+            Assert.NotNull(updatedUser.VerificationCode);
+            Assert.NotNull(updatedUser.VerificationCodeExpiresAt);
+            Assert.NotNull(updatedUser.VerificationCodeLastSentAt);
+        }
+    }
+
+    [Fact]
+    public async Task ResendVerificationEmail_Within_One_Minute_Returns_TooManyRequests()
+    {
+        var email = "ratelimit@example.com";
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+
+            var user = new ApplicationUser
+            {
+                UserName = email,
+                Email = email,
+                EmailConfirmed = false,
+                VerificationCodeLastSentAt = DateTimeOffset.UtcNow
+            };
+
+            var result = await userManager.CreateAsync(user, "StrongPass123!");
+            Assert.True(result.Succeeded);
+        }
+
+        var request = new ResendVerificationEmailRequest(email);
+        var response = await _client.PostAsJsonAsync("/api/v1/auth/resend-verification-email", request);
+
+        Assert.Equal((HttpStatusCode)429, response.StatusCode);
     }
 
     [Fact]
@@ -74,8 +211,7 @@ public class AuthEndpointTests : IClassFixture<ManagementApiFactory>
             {
                 UserName = email,
                 Email = email,
-                EmailConfirmed = false,
-                IsEmailVerified = false
+                EmailConfirmed = false
             };
 
             var result = await userManager.CreateAsync(user, "StrongPass123!");
@@ -180,7 +316,6 @@ public class AuthEndpointTests : IClassFixture<ManagementApiFactory>
             Assert.NotEqual(email, user.Email);
             Assert.NotEqual(email, user.UserName);
             Assert.False(user.EmailConfirmed);
-            Assert.False(user.IsEmailVerified);
             Assert.Null(user.PhoneNumber);
             Assert.Null(user.VerificationCode);
             Assert.Null(user.VerificationCodeExpiresAt);

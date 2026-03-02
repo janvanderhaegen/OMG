@@ -24,9 +24,6 @@ public class AuthDbContext : IdentityDbContext<ApplicationUser, IdentityRole<Gui
         {
             b.ToTable("users");
 
-            b.Property(u => u.IsEmailVerified)
-                .HasDefaultValue(false);
-
             b.Property(u => u.VerificationCode)
                 .HasMaxLength(256);
 

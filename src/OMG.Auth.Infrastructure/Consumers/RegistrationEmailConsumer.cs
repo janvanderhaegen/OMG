@@ -1,7 +1,5 @@
 using MassTransit;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using OMG.Auth.Infrastructure.Entities;
 using OMG.Messaging.Contracts.Auth;
 
 namespace OMG.Auth.Infrastructure.Consumers;
@@ -14,12 +12,10 @@ namespace OMG.Auth.Infrastructure.Consumers;
 /// </summary> 
 public class RegistrationEmailConsumer : IConsumer<SendRegistrationEmail>
 {
-    private readonly AuthDbContext _dbContext;
     private readonly ILogger<RegistrationEmailConsumer> _logger;
 
-    public RegistrationEmailConsumer(AuthDbContext dbContext, ILogger<RegistrationEmailConsumer> logger)
+    public RegistrationEmailConsumer(ILogger<RegistrationEmailConsumer> logger)
     {
-        _dbContext = dbContext;
         _logger = logger;
     }
 
@@ -28,32 +24,10 @@ public class RegistrationEmailConsumer : IConsumer<SendRegistrationEmail>
         var message = context.Message;
 
         _logger.LogInformation(
-            "Mock sending registration email to {Email} with verification code {Code}",
+            "Mock sending registration email to {Email} with verification code {Code}. " +
+            "User must verify via /api/v1/auth/verify-email using this code.",
             message.Email,
             message.VerificationCode);
-
-        var user = await _dbContext.Set<ApplicationUser>()
-            .FirstOrDefaultAsync(u => u.Id == message.UserId, context.CancellationToken)
-            .ConfigureAwait(false);
-
-        if (user is null)
-        {
-            _logger.LogWarning(
-                "RegistrationEmailConsumer could not find user with id {UserId} to verify.",
-                message.UserId);
-            return;
-        }
-
-        user.IsEmailVerified = true;
-        user.EmailConfirmed = true;
-        user.VerificationCode = null;
-        user.VerificationCodeExpiresAt = null;
-
-        await _dbContext.SaveChangesAsync(context.CancellationToken).ConfigureAwait(false);
-
-        _logger.LogInformation(
-            "User {UserId} has been automatically marked as verified (demo behavior).",
-            message.UserId);
     }
 }
 

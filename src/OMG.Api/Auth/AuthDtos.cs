@@ -28,3 +28,11 @@ public sealed record RefreshRequest(
     [property: Required]
     string RefreshToken);
 
+public sealed record RegisterResponse(
+    string VerificationCode);
+
+public sealed record ResendVerificationEmailRequest(
+    [property: Required]
+    [property: EmailAddress]
+    string Email);
+
