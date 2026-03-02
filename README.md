@@ -54,16 +54,16 @@ As a user, I can see an overview list of all my gardens linked to my account so 
 - [X] US07 – Garden target humidity configuration  
 As a user, I can configure a target humidity level (0–100) per garden so that I can express the desired environment for the plants in that garden.
 
-- [ ] US08 – Plant creation in a garden  
+- [X] US08 – Plant creation in a garden  
 As a user, I can add plants to a garden with their basic details (name, species, type, plantation date, surface area required, ideal humidity level) so that I can track what is growing where.
 
-- [ ] US09 – Plant CRUD  
+- [X] US09 – Plant CRUD  
 As a user, I can view, update, and delete plant details in a garden so that I can keep my garden inventory accurate.
 
-- [ ] US10 – Surface area validation  
+- [X] US10 – Surface area validation  
 As a user, I receive a clear error when adding or updating plants in a garden would cause the total `surfaceAreaRequired` to exceed the garden’s `totalSurfaceArea` so that the system prevents overcrowding.
 
-- [ ] US11 – RESTful API for core operations  
+- [X] US11 – RESTful API for core operations  
 As an API consumer, I can interact with a RESTful HTTP API that exposes all garden and plant operations so that I can integrate this system with other tools.
 
 - [X] US12 – Swagger/Scalar/OpenAPI documentation  
