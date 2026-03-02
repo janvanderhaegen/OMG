@@ -24,13 +24,15 @@ using OMG.Management.Infrastructure.Repositories;
 using OMG.Telemetrics.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
+var isDevelopment = builder.Environment.IsDevelopment();
+var isTesting = builder.Environment.IsEnvironment("Testing");
 
 builder.Services.AddOpenApi();
 builder.AddServiceDefaults();
 
 builder.Services.AddDbContext<ManagementDbContext>(options =>
 {
-    if (builder.Environment.IsEnvironment("Testing"))
+    if (isTesting)
     {
         options.UseInMemoryDatabase("ManagementTests");
     }
@@ -45,7 +47,7 @@ builder.Services.AddDbContext<ManagementDbContext>(options =>
 
 builder.Services.AddDbContext<AuthDbContext>(options =>
 {
-    if (builder.Environment.IsEnvironment("Testing"))
+    if (isTesting)
     {
         options.UseInMemoryDatabase("AuthTests");
     }
@@ -60,7 +62,7 @@ builder.Services.AddDbContext<AuthDbContext>(options =>
 
 builder.Services.AddDbContext<TelemetricsDbContext>(options =>
 {
-    if (builder.Environment.IsEnvironment("Testing"))
+    if (isTesting)
     {
         options.UseInMemoryDatabase("TelemetricsTests");
     }
@@ -120,7 +122,7 @@ builder.Services
 
 builder.Services.AddAuthorization();
 
-if (!builder.Environment.IsEnvironment("Testing"))
+if (!isTesting)
 {
     builder.Services.AddRateLimiter(options =>
     {
@@ -130,7 +132,7 @@ if (!builder.Environment.IsEnvironment("Testing"))
                 factory: _ => new FixedWindowRateLimiterOptions
                 {
                     PermitLimit = 5,
-                    Window = TimeSpan.FromMinutes(5),
+                    Window = isDevelopment ? TimeSpan.FromSeconds(30) : TimeSpan.FromMinutes(5),
                     QueueLimit = 0,
                     AutoReplenishment = true
                 }));
@@ -153,7 +155,7 @@ builder.Services.AddMessaging(builder.Configuration);
 var app = builder.Build();
 
 // In development, ensure the management and telemetrics database schemas exist.
-if (app.Environment.IsDevelopment())
+if (isDevelopment)
 {
     using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<ManagementDbContext>();
@@ -192,7 +194,7 @@ app.MapOpenApi();
 app.UseSwaggerUI(options =>
 {
     options.SwaggerEndpoint("/openapi/v1.json", "OMG API V1");
-}); 
+});
 app.MapScalarApiReference();
 
 app.MapHealthEndpoints();
