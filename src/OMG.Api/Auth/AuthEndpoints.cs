@@ -3,15 +3,14 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.Mvc;
-using MassTransit;
 using OMG.Api.Security;
 using OMG.Auth.Infrastructure.Entities;
 using OMG.Auth.Infrastructure.Services;
+using OMG.Auth.Infrastructure.Messaging;
 using OMG.Management.Domain.Abstractions;
 using OMG.Management.Domain.Gardens;
 using OMG.Management.Infrastructure.Messaging;
-using OMG.Messaging.Contracts.Auth;
-using OMG.Management.Domain.Common;
+using OMG.Management.Domain.Common; 
 
 namespace OMG.Api.Auth;
 
@@ -26,7 +25,7 @@ public static class AuthEndpoints
                 "/register",
                 async Task<Results<Created, ValidationProblem>> (
                     [FromServices] UserManager<ApplicationUser> userManager,
-                    [FromServices] IPublishEndpoint publishEndpoint,
+                    [FromServices] IAuthIntegrationEventPublisher authIntegrationEventPublisher, 
                     [FromBody] RegisterRequest request,
                     CancellationToken cancellationToken) =>
                 {
@@ -71,10 +70,13 @@ public static class AuthEndpoints
                         throw new Exception("Instance wasn't properly configured with correct roles");
                     }
 
-                    await publishEndpoint.Publish(new SendRegistrationEmail(
-                        UserId: user.Id,
-                        Email: user.Email ?? string.Empty,
-                        VerificationCode: verificationCode), cancellationToken).ConfigureAwait(false);
+                    await authIntegrationEventPublisher
+                        .PublishRegistrationEmailAsync(
+                            user.Id,
+                            user.Email ?? string.Empty,
+                            verificationCode,
+                            cancellationToken)
+                        .ConfigureAwait(false);
 
                     return TypedResults.Created(string.Empty);
                 })

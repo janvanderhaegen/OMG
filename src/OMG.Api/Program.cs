@@ -15,6 +15,7 @@ using OMG.Auth.Infrastructure.Entities;
 using OMG.Auth.Infrastructure.Options;
 using OMG.Auth.Infrastructure.Security;
 using OMG.Auth.Infrastructure.Services;
+using OMG.Auth.Infrastructure.Messaging;
 using OMG.Management.Infrastructure;
 using OMG.Management.Infrastructure.Messaging;
 using OMG.Management.Domain.Abstractions;
@@ -140,6 +141,7 @@ builder.Services.AddScoped<IGardenRepository, GardenRepository>();
 builder.Services.AddScoped<IManagementUnitOfWork, ManagementUnitOfWork>();
 
 builder.Services.AddScoped<IGardenIntegrationEventPublisher, GardenIntegrationEventPublisher>();
+builder.Services.AddScoped<IAuthIntegrationEventPublisher, AuthIntegrationEventPublisher>();
 
 builder.Services.AddScoped<ITokenService, TokenService>();
 

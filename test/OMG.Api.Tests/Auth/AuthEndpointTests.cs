@@ -10,6 +10,7 @@ using OMG.Auth.Infrastructure.Entities;
 using OMG.Auth.Infrastructure.Services;
 using OMG.Management.Infrastructure;
 using OMG.Management.Infrastructure.Entities;
+using OMG.Messaging.Contracts.Auth;
 
 namespace OMG.Api.Tests;
 
@@ -50,6 +51,14 @@ public class AuthEndpointTests : IClassFixture<ManagementApiFactory>
         Assert.False(user!.IsEmailVerified);
         Assert.False(user.EmailConfirmed);
         Assert.NotNull(user.VerificationCode);
+
+        var publishedMessages = _factory.AuthIntegrationEventPublisher.PublishedMessages;
+        Assert.Single(publishedMessages);
+
+        var message = publishedMessages.Single();
+        Assert.Equal(user.Id, message.UserId);
+        Assert.Equal(email, message.Email);
+        Assert.Equal(user.VerificationCode, message.VerificationCode);
     }
 
     [Fact]
