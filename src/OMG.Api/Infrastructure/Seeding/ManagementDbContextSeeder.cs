@@ -65,6 +65,7 @@ public static class ManagementDbContextSeeder
                 Species = "Solanum lycopersicum",
                 Type = "Vegetable",
                 PlantationDate = plantationDate,
+                CreatedAt = now,
                 SurfaceAreaRequired = 3,
                 IdealHumidityLevel = 60
             },
@@ -76,6 +77,7 @@ public static class ManagementDbContextSeeder
                 Species = "Cucumis sativus",
                 Type = "Vegetable",
                 PlantationDate = plantationDate,
+                CreatedAt = now,
                 SurfaceAreaRequired = 3,
                 IdealHumidityLevel = 58
             },
@@ -87,6 +89,7 @@ public static class ManagementDbContextSeeder
                 Species = "Fragaria × ananassa",
                 Type = "Fruit",
                 PlantationDate = plantationDate,
+                CreatedAt = now,
                 SurfaceAreaRequired = 3,
                 IdealHumidityLevel = 65
             },
@@ -98,6 +101,7 @@ public static class ManagementDbContextSeeder
                 Species = "Lactuca sativa",
                 Type = "Vegetable",
                 PlantationDate = plantationDate,
+                CreatedAt = now,
                 SurfaceAreaRequired = 2,
                 IdealHumidityLevel = 55
             },
@@ -109,6 +113,7 @@ public static class ManagementDbContextSeeder
                 Species = "Ocimum basilicum",
                 Type = "Flower",
                 PlantationDate = plantationDate,
+                CreatedAt = now,
                 SurfaceAreaRequired = 1,
                 IdealHumidityLevel = 70
             }

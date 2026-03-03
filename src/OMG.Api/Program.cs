@@ -7,6 +7,7 @@ using OMG.Api.Auth;
 using OMG.Api.Infrastructure.Messaging;
 using OMG.Api.Infrastructure.Seeding;
 using OMG.Api.Management;
+using OMG.Api.Reports;
 using OMG.Api.Telemetrics;
 using OMG.Auth.Infrastructure;
 using OMG.Auth.Infrastructure.Entities;
@@ -206,6 +207,7 @@ app.MapHealthEndpoints();
 app.MapAuthEndpoints();
 app.MapManagementGardenEndpoints();
 app.MapManagementPlantEndpoints();
+app.MapReportEndpoints();
 app.MapTelemetryEndpoints();
 
 app.Run();

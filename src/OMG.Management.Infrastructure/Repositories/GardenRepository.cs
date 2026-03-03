@@ -65,7 +65,8 @@ public sealed class GardenRepository(ManagementDbContext dbContext) : IGardenRep
         }
 
         var plantEntity = MapToEntity(plant, garden.Id.Value);
-        dbContext.Plants.Add(plantEntity); 
+        plantEntity.CreatedAt = DateTimeOffset.UtcNow;
+        dbContext.Plants.Add(plantEntity);
     }
 
     public async Task SaveAsync(Garden garden, CancellationToken cancellationToken = default)
@@ -106,7 +107,9 @@ public sealed class GardenRepository(ManagementDbContext dbContext) : IGardenRep
             }
             else
             {
-                entity.Plants.Add(MapToEntity(plant, garden.Id.Value));
+                var newPlantEntity = MapToEntity(plant, garden.Id.Value);
+                newPlantEntity.CreatedAt = DateTimeOffset.UtcNow;
+                entity.Plants.Add(newPlantEntity);
             }
         }
 
@@ -114,7 +117,7 @@ public sealed class GardenRepository(ManagementDbContext dbContext) : IGardenRep
         {
             if (!desiredPlantIds.Contains(plantEntity.Id))
             {
-                entity.Plants.Remove(plantEntity);
+                plantEntity.DeletedAt = DateTimeOffset.UtcNow;
             }
         }
     }
@@ -198,6 +201,7 @@ public sealed class GardenRepository(ManagementDbContext dbContext) : IGardenRep
             Species = plant.Species,
             Type = plant.Type.ToString(),
             PlantationDate = plant.PlantationDate,
+            CreatedAt = DateTimeOffset.UtcNow,
             SurfaceAreaRequired = plant.SurfaceAreaRequired.Value,
             IdealHumidityLevel = plant.IdealHumidityLevel.Value,
             MeterId = plant.MeterId

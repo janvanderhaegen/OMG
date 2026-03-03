@@ -21,31 +21,29 @@ public sealed class PlantMeterAttachedConsumer(
         var existing = await telemetryDb.Plants
             .FirstOrDefaultAsync(p => p.PlantId == msg.PlantId, context.CancellationToken)
             .ConfigureAwait(false);
-        if (existing != null)
+
+        if (existing is not null)
         {
-            if (existing is not null)
-            {
-                existing.MeterId = msg.MeterId;
-                existing.HasIrrigationLine = true;
-                existing.IdealHumidityLevel = msg.IdealHumidityLevel;
-            }
-            else
-            {
-                var utcNow = new DateTimeOffset(DateTime.UtcNow, TimeSpan.Zero);
-                var entity = new TelemetryPlantEntity
-                {
-                    PlantId = msg.PlantId,
-                    GardenId = msg.GardenId,
-                    MeterId = msg.MeterId,
-                    IdealHumidityLevel = msg.IdealHumidityLevel,
-                    CurrentHumidityLevel = msg.IdealHumidityLevel,  //would be null and get this from reader IRL
-                    IsWatering = false,
-                    HasIrrigationLine = true,
-                    LastTelemetryAt = utcNow
-                };
-                telemetryDb.Plants.Add(entity);
-            }
-            await telemetryDb.SaveChangesAsync(context.CancellationToken).ConfigureAwait(false);
+            existing.MeterId = msg.MeterId;
+            existing.HasIrrigationLine = true;
+            existing.IdealHumidityLevel = msg.IdealHumidityLevel;
         }
-    } 
+        else
+        {
+            var utcNow = new DateTimeOffset(DateTime.UtcNow, TimeSpan.Zero);
+            var entity = new TelemetryPlantEntity
+            {
+                PlantId = msg.PlantId,
+                GardenId = msg.GardenId,
+                MeterId = msg.MeterId,
+                IdealHumidityLevel = msg.IdealHumidityLevel,
+                CurrentHumidityLevel = msg.IdealHumidityLevel,  //would be null and get this from reader IRL
+                IsWatering = false,
+                HasIrrigationLine = true,
+                LastTelemetryAt = utcNow
+            };
+            telemetryDb.Plants.Add(entity);
+        }
+        await telemetryDb.SaveChangesAsync(context.CancellationToken).ConfigureAwait(false);
+    }
 }

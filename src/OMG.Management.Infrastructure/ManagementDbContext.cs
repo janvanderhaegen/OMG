@@ -85,6 +85,13 @@ public class ManagementDbContext(DbContextOptions<ManagementDbContext> options) 
         plant.Property(x => x.PlantationDate)
             .IsRequired();
 
+        plant.Property(x => x.CreatedAt)
+            .IsRequired();
+
+        plant.Property(x => x.DeletedAt);
+
+        plant.HasQueryFilter(x => x.DeletedAt == null);
+
         plant.Property(x => x.SurfaceAreaRequired)
             .IsRequired();
 

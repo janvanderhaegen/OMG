@@ -53,6 +53,7 @@ public class PlantManagementEndpointTests : IClassFixture<ManagementApiFactory>
                 Species = "Solanum lycopersicum",
                 Type = "Vegetable",
                 PlantationDate = DateTimeOffset.UtcNow.Date,
+                CreatedAt = DateTimeOffset.UtcNow,
                 SurfaceAreaRequired = 5,
                 IdealHumidityLevel = 60
             });
@@ -101,6 +102,7 @@ public class PlantManagementEndpointTests : IClassFixture<ManagementApiFactory>
                 Species = "Solanum lycopersicum",
                 Type = "Vegetable",
                 PlantationDate = DateTimeOffset.UtcNow.Date,
+                CreatedAt = DateTimeOffset.UtcNow,
                 SurfaceAreaRequired = 5,
                 IdealHumidityLevel = 60
             });
@@ -256,6 +258,7 @@ public class PlantManagementEndpointTests : IClassFixture<ManagementApiFactory>
                 Species = "Solanum lycopersicum",
                 Type = "Vegetable",
                 PlantationDate = DateTimeOffset.UtcNow.Date,
+                CreatedAt = DateTimeOffset.UtcNow,
                 SurfaceAreaRequired = 5,
                 IdealHumidityLevel = 60
             });
@@ -330,6 +333,7 @@ public class PlantManagementEndpointTests : IClassFixture<ManagementApiFactory>
                 Species = "Solanum lycopersicum",
                 Type = "Vegetable",
                 PlantationDate = DateTimeOffset.UtcNow.Date,
+                CreatedAt = DateTimeOffset.UtcNow,
                 SurfaceAreaRequired = 5,
                 IdealHumidityLevel = 60
             });

@@ -16,6 +16,10 @@ public class PlantEntity
 
     public DateTimeOffset PlantationDate { get; set; }
 
+    public DateTimeOffset CreatedAt { get; set; }
+
+    public DateTimeOffset? DeletedAt { get; set; }
+
     public decimal SurfaceAreaRequired { get; set; }
 
     public int IdealHumidityLevel { get; set; }
