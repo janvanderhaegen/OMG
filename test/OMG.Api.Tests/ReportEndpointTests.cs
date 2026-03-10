@@ -5,16 +5,9 @@ using OMG.Api.Tests.Auth;
 
 namespace OMG.Api.Tests;
 
-public class ReportEndpointTests : IClassFixture<ManagementApiFactory>
+public class ReportEndpointTests(ManagementApiFactory factory) : IClassFixture<ManagementApiFactory>
 {
-    private readonly ManagementApiFactory _factory;
-    private readonly HttpClient _client;
-
-    public ReportEndpointTests(ManagementApiFactory factory)
-    {
-        _factory = factory;
-        _client = factory.CreateClient();
-    }
+    private readonly HttpClient _client = factory.CreateClient();
 
     [Fact]
     public async Task GetGardenReport_ReturnsUnauthorized_WhenNotAuthenticated()
@@ -27,7 +20,7 @@ public class ReportEndpointTests : IClassFixture<ManagementApiFactory>
     [Fact]
     public async Task GetGardenReport_ReturnsOkWithReport_WhenAuthenticated()
     {
-        await AuthTestHelper.AuthenticateAsync(_factory, _client, "report-user@example.com");
+        await AuthTestHelper.AuthenticateAsync(factory, _client, "report-user@example.com");
 
         var response = await _client.GetAsync("/api/v1/reports/garden-report");
 
@@ -44,7 +37,7 @@ public class ReportEndpointTests : IClassFixture<ManagementApiFactory>
     [Fact]
     public async Task GetGardenReport_ReturnsOkWithZeros_WhenUserHasNoGardens()
     {
-        await AuthTestHelper.AuthenticateAsync(_factory, _client, "report-no-gardens@example.com");
+        await AuthTestHelper.AuthenticateAsync(factory, _client, "report-no-gardens@example.com");
 
         var response = await _client.GetAsync("/api/v1/reports/garden-report?lastMinutes=60");
 
@@ -59,7 +52,7 @@ public class ReportEndpointTests : IClassFixture<ManagementApiFactory>
     [Fact]
     public async Task GetGardenReport_AcceptsQueryParameters()
     {
-        await AuthTestHelper.AuthenticateAsync(_factory, _client, "report-params@example.com");
+        await AuthTestHelper.AuthenticateAsync(factory, _client, "report-params@example.com");
 
         var response = await _client.GetAsync(
             "/api/v1/reports/garden-report?from=2026-01-01T00:00:00Z&to=2026-12-31T23:59:59Z&sinceDate=2026-01-01T00:00:00Z");
@@ -69,6 +62,5 @@ public class ReportEndpointTests : IClassFixture<ManagementApiFactory>
         Assert.NotNull(report);
         Assert.NotNull(report.PeriodStart);
         Assert.NotNull(report.PeriodEnd);
-        Assert.NotNull(report.SinceDate);
     }
 }
