@@ -26,6 +26,7 @@ public static class AuthEndpoints
                     [FromServices] UserManager<ApplicationUser> userManager,
                     [FromServices] IAuthIntegrationEventPublisher authIntegrationEventPublisher,
                     [FromServices] IPublishUnitOfWork unitOfWork,
+                    [FromServices] IHostEnvironment environment,
                     [FromBody] RegisterRequest request,
                     CancellationToken cancellationToken) =>
                 {
@@ -80,7 +81,9 @@ public static class AuthEndpoints
                         .ConfigureAwait(false);
                     await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
-                    var response = new RegisterResponse(verificationCode);
+                    var response = environment.IsEnvironment("Testing")
+                        ? new RegisterResponse(verificationCode)
+                        : new RegisterResponse(null);
                     return TypedResults.Created(string.Empty, response);
                 })
             .WithName("Register")

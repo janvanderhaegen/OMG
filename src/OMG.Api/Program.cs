@@ -140,6 +140,29 @@ if (!isTesting)
                     QueueLimit = 0,
                     AutoReplenishment = true
                 }));
+
+        options.AddPolicy("telemetry", httpContext =>
+        {
+            var ipAddress = httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+            httpContext.Request.Headers.TryGetValue("X-Garden-Telemetry-Key", out var apiKeyValues);
+            var apiKey = apiKeyValues.FirstOrDefault() ?? "none";
+
+            var partitionKey = $"{ipAddress}:{apiKey}";
+
+            var telemetrySection = builder.Configuration.GetSection("RateLimiting:Telemetry");
+            var permitLimit = telemetrySection.GetValue("PermitLimit", 120);
+            var windowSeconds = telemetrySection.GetValue("WindowSeconds", 60);
+
+            return RateLimitPartition.GetFixedWindowLimiter(
+                partitionKey: partitionKey,
+                factory: _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = permitLimit,
+                    Window = TimeSpan.FromSeconds(windowSeconds),
+                    QueueLimit = 0,
+                    AutoReplenishment = true
+                });
+        });
     });
 }
 
@@ -186,6 +209,29 @@ if (isDevelopment)
         teleDb.Database.Migrate();
     }
 
+}
+
+if (!isDevelopment)
+{
+    app.UseExceptionHandler(errorApp =>
+    {
+        errorApp.Run(async context =>
+        {
+            var exceptionFeature = context.Features.Get<Microsoft.AspNetCore.Diagnostics.IExceptionHandlerFeature>();
+            if (exceptionFeature is not null)
+            {
+                var loggerFactory = context.RequestServices.GetRequiredService<ILoggerFactory>();
+                var logger = loggerFactory.CreateLogger("GlobalExceptionHandler");
+                logger.LogError(exceptionFeature.Error, "Unhandled exception processing request {Path}", context.Request.Path);
+            }
+
+            var problem = Results.Problem(
+                title: "An unexpected error occurred.",
+                statusCode: StatusCodes.Status500InternalServerError);
+
+            await problem.ExecuteAsync(context).ConfigureAwait(false);
+        });
+    });
 }
 
 if (!app.Environment.IsEnvironment("Testing"))

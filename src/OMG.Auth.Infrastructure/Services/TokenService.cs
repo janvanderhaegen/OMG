@@ -4,6 +4,7 @@ using System.Security.Cryptography;
 using System.Text;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using OMG.Auth.Infrastructure.Entities;
@@ -34,6 +35,7 @@ public class TokenService : ITokenService
 {
     private readonly AuthDbContext _dbContext;
     private readonly UserManager<ApplicationUser> _userManager;
+    private readonly ILogger<TokenService> _logger;
     private readonly JwtOptions _jwtOptions;
     private readonly JwtSecurityTokenHandler _tokenHandler = new();
     private readonly byte[] _signingKey;
@@ -41,10 +43,12 @@ public class TokenService : ITokenService
     public TokenService(
         AuthDbContext dbContext,
         UserManager<ApplicationUser> userManager,
-        IOptions<JwtOptions> jwtOptions)
+        IOptions<JwtOptions> jwtOptions,
+        ILogger<TokenService> logger)
     {
         _dbContext = dbContext;
         _userManager = userManager;
+        _logger = logger;
         _jwtOptions = jwtOptions.Value;
 
         if (string.IsNullOrWhiteSpace(_jwtOptions.Secret))
@@ -90,6 +94,15 @@ public class TokenService : ITokenService
 
         if (existing.RevokedAt is not null || existing.ExpiresAt <= DateTimeOffset.UtcNow)
         {
+            _logger.LogWarning(
+                "Refresh token reuse or invalid token detected for user {UserId} from IP {IpAddress}. Token revoked at {RevokedAt}, expires at {ExpiresAt}.",
+                existing.UserId,
+                ipAddress,
+                existing.RevokedAt,
+                existing.ExpiresAt);
+
+            await RevokeAllRefreshTokensAsync(existing.UserId, ipAddress, "Detected refresh token reuse or invalid token", cancellationToken).ConfigureAwait(false);
+
             return null;
         }
 

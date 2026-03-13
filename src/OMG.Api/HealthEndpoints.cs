@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using OMG.Api.Management.Models;
 using OMG.Management.Domain.Abstractions;
 using OMG.Management.Domain.Common;
@@ -16,7 +18,13 @@ public static class Health
     {
         var group = endpoints.MapGroup("/api/v1/health")
             .WithTags("System");
-        group.MapGet("/", async Task<IResult> (ManagementDbContext dbContext, CancellationToken cancellationToken) =>
+        group.MapGet(
+            "/",
+            async Task<IResult> (
+                ManagementDbContext dbContext,
+                IHostEnvironment environment,
+                [FromServices] ILogger<HealthResponse> logger,
+                CancellationToken cancellationToken) =>
         {
             try
             {
@@ -35,9 +43,15 @@ public static class Health
             }
             catch (Exception ex)
             {
+                logger.LogError(ex, "Health check failed.");
+
+                var detail = environment.IsDevelopment()
+                    ? ex.Message
+                    : "A dependency is unavailable.";
+
                 return Results.Problem(
                     title: "Dependency health check failed.",
-                    detail: ex.Message,
+                    detail: detail,
                     statusCode: StatusCodes.Status503ServiceUnavailable,
                     instance: "/api/v1/health",
                     type: "https://httpstatuses.com/503");

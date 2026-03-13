@@ -72,6 +72,7 @@ public static class TelemetryEndpoints
             .WithName("PostTelemetryReadings")
             .WithSummary("Webhook: Ingests telemetry readings for a garden.")
             .WithDescription("(Called from the 'external system - IrrigationSimulationWorker.cs'. Accepts batched meter readings (humidity, watering flag) identified by a garden telemetry API key.")
+            .RequireRateLimiting("telemetry")
             .ExcludeFromDescription(); // exclude from openAPI documentation since this is a webhook intended for internal use only
 
         return endpoints;

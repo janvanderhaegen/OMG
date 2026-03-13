@@ -29,7 +29,7 @@ public sealed record RefreshRequest(
     string RefreshToken);
 
 public sealed record RegisterResponse(
-    string VerificationCode);
+    string? VerificationCode);
 
 public sealed record ResendVerificationEmailRequest(
     [property: Required]
