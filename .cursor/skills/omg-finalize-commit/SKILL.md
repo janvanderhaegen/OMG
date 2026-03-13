@@ -42,7 +42,12 @@ feat(garden): add basic garden CRUD
 ```
 ## Step 2 – Run tests
 
-- In reality we would run the tests here, but they are locked because I'm using Visual Studio and keep forgetting to stop debugging. So, skip the tests.
+- Run the project's automated tests from the appropriate root (for OMG backend, typically `dotnet test` from the solution root).
+- Wait for the test run to complete.
+- If **any** tests fail:
+  - Do **not** continue to the commit/push steps.
+  - Report the failure summary and relevant output back to the user.
+- Only proceed to Step 3 if the test suite is fully green.
 
 ## Step 3 – Commit
 
