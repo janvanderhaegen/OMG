@@ -1,0 +1,77 @@
+---
+description: C# coding conventions.
+alwaysApply: true
+---
+
+# C# Coding Rules
+
+These rules define how C# code should be written.
+
+The target runtime is **.NET 10** (`net10.0`) using ASP.NET Core minimal APIs, background services, and EF Core.
+
+## Code style and structure
+
+- Prefer **concise, idiomatic C#** with clear, self-documenting names.
+- Follow standard .NET conventions.
+- Use **PascalCase** for classes, records, structs, enums, methods, and public members.
+- Use **camelCase** for local variables, parameters, and private fields.
+- Prefix interfaces with `I` (e.g., `IPlantTelemetryRepository`, `IUnitOfWork`).
+- Group code by responsibility (Domain, Application, Infrastructure, Api).
+- Keep methods and types focused; avoid “god classes” and overly long methods.
+- Prefer LINQ and lambda expressions for collection transformations when they improve clarity.
+- Use expression-bodied members when they stay readable; avoid overly compressed code.
+
+## C# language features
+
+- Use C# 10+ features where they improve clarity:
+  - `record`/`record struct` for simple data carriers and immutable models where appropriate.
+  - Pattern matching (`switch`, `is`, relational patterns) for branching on types and values.
+  - Null-coalescing (`??`, `??=`), null-conditional access (`?.`) to avoid verbose null checks.
+- Use `var` when the type is obvious from the right-hand side; otherwise, spell the type explicitly.
+- Use string interpolation (`$"..."`) instead of `string.Format` for new code.
+
+## Async & ConfigureAwait
+
+- Use **async/await** for I/O-bound operations across the backend (database, HTTP calls, messaging, etc.).
+  - ASP.NET Core does not rely on a legacy UI SynchronizationContext, and consistently using plain `await` keeps code simpler and more readable.
+  - Only consider `.ConfigureAwait(false)` in **truly reusable libraries** that are expected to run under UI or legacy ASP.NET SynchronizationContexts. 
+
+## Error handling and validation
+
+- Use exceptions for truly exceptional conditions, not for normal control flow.
+- Prefer domain-specific exceptions or result types at the Domain/Application layers where appropriate.
+- Use ASP.NET Core middleware and minimal API conventions for mapping exceptions and validation errors to HTTP responses.
+- Validate input at API and Application boundaries; avoid sprinkling ad-hoc validation deep inside Infrastructure.
+- Log errors with enough context to diagnose issues without leaking sensitive information.
+
+## Dependency Injection and composition
+
+- Use **constructor injection** for dependencies; avoid service locators and static singletons.
+- Register services in the appropriate layer-specific composition roots, keeping Domain free of DI framework references.
+- Prefer injecting abstractions (interfaces) over concrete types where it supports testing and clear boundaries.
+- For background work, use `IHostedService` / `BackgroundService` and inject dependencies via DI rather than manually creating them.
+
+## EF Core and persistence
+
+- Keep EF Core `DbContext` and entities in Infrastructure projects; map to Domain types without leaking EF types across boundaries.
+- Use async EF Core APIs (`ToListAsync`, `FirstOrDefaultAsync`, `SaveChangesAsync`, etc.) with simple `await` as described above.
+- Be mindful of N+1 query patterns; prefer eager loading or explicit queries where appropriate.
+- Use transactions where a set of changes must be committed atomically; prefer patterns that keep transaction scopes small and clear.
+
+## API design (minimal APIs)
+
+- Follow resource-oriented, RESTful routes (e.g., `/api/gardens`, `/api/gardens/{gardenId}/plants`), consistent with existing OMG API rules.
+- Keep minimal API handlers thin:
+  - Parse and validate input.
+  - Call Application-layer services or use cases.
+  - Map results to DTOs and HTTP status codes.
+- Use proper HTTP status codes (`200/201` on success, `400` for validation issues, `404` when not found, etc.).
+- Prefer typed results and ProblemDetails-style responses for errors where appropriate.
+
+## Testing
+
+- Testing strategy: prioritize automated tests for non-trivial business rules, especially in Domain and Application layers.
+- Use xUnit (or the project’s chosen framework) for unit and integration tests.
+- For async tests, use `async Task` test methods and simple `await`; do not use `.ConfigureAwait(false)` in tests.
+- When changing or adding behavior, add or update tests alongside the code to keep behavior well specified.
+

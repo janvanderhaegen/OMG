@@ -26,7 +26,7 @@ public sealed class GardenIntegrationEventPublisher(IPublishEndpoint publishEndp
             if (message == null)
                 continue;
 
-            await publishEndpoint.Publish(message, cancellationToken).ConfigureAwait(false);
+            await publishEndpoint.Publish(message, cancellationToken);
             aggregatesToClear.Add(hasGarden.Garden);
         }
 

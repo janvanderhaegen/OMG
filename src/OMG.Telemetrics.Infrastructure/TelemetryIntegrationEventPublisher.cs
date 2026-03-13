@@ -24,7 +24,7 @@ public sealed class TelemetryIntegrationEventPublisher(IPublishEndpoint publishE
                             e.CurrentHumidityLevel,
                             e.IdealHumidityLevel,
                             e.OccurredAt),
-                        cancellationToken).ConfigureAwait(false);
+                        cancellationToken);
                     break;
                 case WateringStartedDomainEvent e:
                     await publishEndpoint.Publish(
@@ -34,7 +34,7 @@ public sealed class TelemetryIntegrationEventPublisher(IPublishEndpoint publishE
                             e.MeterId,
                             e.StartedAt,
                             e.OccurredAt),
-                        cancellationToken).ConfigureAwait(false);
+                        cancellationToken);
                     break;
                 case WateringCompletedDomainEvent e:
                     await publishEndpoint.Publish(
@@ -44,7 +44,7 @@ public sealed class TelemetryIntegrationEventPublisher(IPublishEndpoint publishE
                             e.MeterId,
                             e.NewHumidityLevel,
                             e.OccurredAt),
-                        cancellationToken).ConfigureAwait(false);
+                        cancellationToken);
                     break;
             }
         }

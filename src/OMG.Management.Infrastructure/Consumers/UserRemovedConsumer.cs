@@ -37,8 +37,7 @@ public sealed class UserRemovedConsumer : IConsumer<UserRemoved>
         var userId = new UserId(message.UserId);
 
         var gardens = await _gardenRepository
-            .ListByUserAsync(userId, context.CancellationToken)
-            .ConfigureAwait(false);
+            .ListByUserAsync(userId, context.CancellationToken);
 
         if (gardens.Count == 0)
         {
@@ -55,12 +54,11 @@ public sealed class UserRemovedConsumer : IConsumer<UserRemoved>
             garden.MarkDeleted(occurredAt);
             _gardenRepository.Remove(garden);
 
-            await _integrationEventPublisher
-                .PublishIntegrationEventsAsync(garden.DomainEvents, context.CancellationToken)
-                .ConfigureAwait(false);
+        await _integrationEventPublisher
+            .PublishIntegrationEventsAsync(garden.DomainEvents, context.CancellationToken);
         }
 
-        await _unitOfWork.SaveChangesAsync(context.CancellationToken).ConfigureAwait(false);
+        await _unitOfWork.SaveChangesAsync(context.CancellationToken);
 
         _logger.LogInformation(
             "UserRemovedConsumer soft-deleted {GardenCount} gardens for user {UserId}.",

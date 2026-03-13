@@ -10,8 +10,7 @@ public sealed class PlantTelemetryRepository(TelemetryDbContext dbContext) : IPl
     {
         var entity = await dbContext.Plants
             .AsNoTracking()
-            .FirstOrDefaultAsync(x => x.PlantId == plantId, cancellationToken)
-            .ConfigureAwait(false);
+            .FirstOrDefaultAsync(x => x.PlantId == plantId, cancellationToken);
 
         if (entity is null) return null;
 
@@ -23,8 +22,7 @@ public sealed class PlantTelemetryRepository(TelemetryDbContext dbContext) : IPl
     {
         var entity = await dbContext.Plants
             .AsNoTracking()
-            .FirstOrDefaultAsync(x => x.GardenId == gardenId && x.MeterId == meterId, cancellationToken)
-            .ConfigureAwait(false);
+            .FirstOrDefaultAsync(x => x.GardenId == gardenId && x.MeterId == meterId, cancellationToken);
 
         if (entity is null) return null;
 
@@ -37,14 +35,13 @@ public sealed class PlantTelemetryRepository(TelemetryDbContext dbContext) : IPl
         var entities = await dbContext.Plants
             .AsNoTracking()
             .Where(x => x.HasIrrigationLine && x.MeterId != null)
-            .ToListAsync(cancellationToken)
-            .ConfigureAwait(false);
+            .ToListAsync(cancellationToken);
 
         var result = new List<(PlantHydrationState State, string? MeterId, Guid GardenId)>();
 
         foreach (var e in entities)
         {
-            var activeSession = await GetActiveSessionForPlantAsync(e.PlantId, cancellationToken).ConfigureAwait(false);
+            var activeSession = await GetActiveSessionForPlantAsync(e.PlantId, cancellationToken);
             result.Add((MapToDomain(e, activeSession), e.MeterId, e.GardenId));
         }
 
@@ -54,15 +51,14 @@ public sealed class PlantTelemetryRepository(TelemetryDbContext dbContext) : IPl
     public async Task AddAsync(PlantHydrationState state, string? meterId, Guid gardenId, CancellationToken cancellationToken = default)
     {
         var entity = MapToEntity(state, meterId, gardenId);
-        await dbContext.Plants.AddAsync(entity, cancellationToken).ConfigureAwait(false);
-        await SyncWateringSessionAsync(state, cancellationToken).ConfigureAwait(false);
+        await dbContext.Plants.AddAsync(entity, cancellationToken);
+        await SyncWateringSessionAsync(state, cancellationToken);
     }
 
     public async Task SaveAsync(PlantHydrationState state, string? meterId, Guid gardenId, CancellationToken cancellationToken = default)
     {
         var entity = await dbContext.Plants
-            .FirstOrDefaultAsync(x => x.PlantId == state.PlantId, cancellationToken)
-            .ConfigureAwait(false);
+            .FirstOrDefaultAsync(x => x.PlantId == state.PlantId, cancellationToken);
 
         if (entity is null)
         {
@@ -80,7 +76,7 @@ public sealed class PlantTelemetryRepository(TelemetryDbContext dbContext) : IPl
             entity.LastTelemetryAt = state.LastIrrigationEnd ?? state.LastIrrigationStart ?? DateTimeOffset.UtcNow;
         }
 
-        await SyncWateringSessionAsync(state, cancellationToken).ConfigureAwait(false);
+        await SyncWateringSessionAsync(state, cancellationToken);
     }
 
     private async Task<WateringSession?> GetActiveSessionForPlantAsync(Guid plantId, CancellationToken cancellationToken)
@@ -89,8 +85,7 @@ public sealed class PlantTelemetryRepository(TelemetryDbContext dbContext) : IPl
             .AsNoTracking()
             .Where(s => s.PlantId == plantId && s.IsActive)
             .OrderByDescending(s => s.StartedAt)
-            .FirstOrDefaultAsync(cancellationToken)
-            .ConfigureAwait(false);
+            .FirstOrDefaultAsync(cancellationToken);
 
         if (sessionEntity is null) return null;
 
@@ -126,8 +121,7 @@ public sealed class PlantTelemetryRepository(TelemetryDbContext dbContext) : IPl
         {
             var activeEntities = await dbContext.WateringSessions
                 .Where(s => s.PlantId == state.PlantId && s.IsActive)
-                .ToListAsync(cancellationToken)
-                .ConfigureAwait(false);
+                .ToListAsync(cancellationToken);
 
             foreach (var se in activeEntities)
             {

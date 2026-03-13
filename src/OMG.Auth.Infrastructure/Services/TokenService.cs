@@ -64,8 +64,8 @@ public class TokenService : ITokenService
         string? ipAddress,
         CancellationToken cancellationToken)
     {
-        var (accessToken, expiresAt) = await CreateAccessTokenAsync(user, cancellationToken).ConfigureAwait(false);
-        var refreshToken = await CreateRefreshTokenAsync(user, ipAddress, cancellationToken).ConfigureAwait(false);
+        var (accessToken, expiresAt) = await CreateAccessTokenAsync(user, cancellationToken);
+        var refreshToken = await CreateRefreshTokenAsync(user, ipAddress, cancellationToken);
 
         return (accessToken, expiresAt, refreshToken);
     }
@@ -84,8 +84,7 @@ public class TokenService : ITokenService
 
         var existing = await _dbContext.RefreshTokens
             .Include(t => t.User)
-            .FirstOrDefaultAsync(t => t.TokenHash == tokenHash, cancellationToken)
-            .ConfigureAwait(false);
+            .FirstOrDefaultAsync(t => t.TokenHash == tokenHash, cancellationToken);
 
         if (existing is null)
         {
@@ -120,27 +119,27 @@ public class TokenService : ITokenService
             existing.RevokedByIp = ipAddress;
             existing.RevocationReason = "Rotated";
 
-            newRefreshToken = await CreateRefreshTokenAsync(user, ipAddress, cancellationToken).ConfigureAwait(false);
+            newRefreshToken = await CreateRefreshTokenAsync(user, ipAddress, cancellationToken);
             existing.ReplacedByTokenHash = HashToken(newRefreshToken);
 
-            await _dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            await _dbContext.SaveChangesAsync(cancellationToken);
         }
         else
         {
-            using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
+            using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             existing.RevokedAt = DateTimeOffset.UtcNow;
             existing.RevokedByIp = ipAddress;
             existing.RevocationReason = "Rotated";
 
-            newRefreshToken = await CreateRefreshTokenAsync(user, ipAddress, cancellationToken).ConfigureAwait(false);
+            newRefreshToken = await CreateRefreshTokenAsync(user, ipAddress, cancellationToken);
             existing.ReplacedByTokenHash = HashToken(newRefreshToken);
 
-            await _dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-            await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+            await _dbContext.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
         }
 
-        var (accessToken, expiresAt) = await CreateAccessTokenAsync(user, cancellationToken).ConfigureAwait(false);
+        var (accessToken, expiresAt) = await CreateAccessTokenAsync(user, cancellationToken);
 
         return (accessToken, expiresAt, newRefreshToken);
     }
@@ -153,8 +152,7 @@ public class TokenService : ITokenService
     {
         var tokens = await _dbContext.RefreshTokens
             .Where(t => t.UserId == userId && t.RevokedAt == null && t.ExpiresAt > DateTimeOffset.UtcNow)
-            .ToListAsync(cancellationToken)
-            .ConfigureAwait(false);
+            .ToListAsync(cancellationToken);
 
         if (tokens.Count == 0)
         {
@@ -168,14 +166,14 @@ public class TokenService : ITokenService
             token.RevocationReason = reason;
         }
 
-        await _dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        await _dbContext.SaveChangesAsync(cancellationToken);
     }
 
     private async Task<(string accessToken, DateTimeOffset expiresAt)> CreateAccessTokenAsync(
         ApplicationUser user,
         CancellationToken cancellationToken)
     {
-        var roles = await _userManager.GetRolesAsync(user).ConfigureAwait(false);
+        var roles = await _userManager.GetRolesAsync(user);
 
         var claims = new List<Claim>
         {
@@ -229,7 +227,7 @@ public class TokenService : ITokenService
         };
 
         _dbContext.RefreshTokens.Add(refreshToken);
-        await _dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        await _dbContext.SaveChangesAsync(cancellationToken);
 
         return rawToken;
     }

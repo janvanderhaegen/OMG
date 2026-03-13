@@ -10,8 +10,7 @@ public sealed class GardenRepository(ManagementDbContext dbContext) : IGardenRep
     {
         var entity = await dbContext.Gardens
             .AsNoTracking()
-            .FirstOrDefaultAsync(x => x.Id == id.Value, cancellationToken)
-            .ConfigureAwait(false);
+            .FirstOrDefaultAsync(x => x.Id == id.Value, cancellationToken);
 
         return entity is null ? null : MapToDomain(entity);
     }
@@ -21,8 +20,7 @@ public sealed class GardenRepository(ManagementDbContext dbContext) : IGardenRep
         var entity = await dbContext.Gardens
             .Include(g => g.Plants)
             .AsNoTracking()
-            .FirstOrDefaultAsync(x => x.Id == id.Value, cancellationToken)
-            .ConfigureAwait(false);
+            .FirstOrDefaultAsync(x => x.Id == id.Value, cancellationToken);
 
         if (entity is null)
         {
@@ -39,8 +37,7 @@ public sealed class GardenRepository(ManagementDbContext dbContext) : IGardenRep
             .AsNoTracking()
             .Where(x => x.UserId == userId.Value)
             .OrderBy(x => x.Name)
-            .ToListAsync(cancellationToken)
-            .ConfigureAwait(false);
+            .ToListAsync(cancellationToken);
 
         return entities.Select(entity => MapToDomain(entity)).ToList();
     }
@@ -48,16 +45,15 @@ public sealed class GardenRepository(ManagementDbContext dbContext) : IGardenRep
     public async Task AddAsync(Garden garden, CancellationToken cancellationToken = default)
     {
         var entity = MapToEntity(garden);
-        await dbContext.Gardens.AddAsync(entity, cancellationToken).ConfigureAwait(false);
+        await dbContext.Gardens.AddAsync(entity, cancellationToken);
     }
 
     public async Task AddPlantAsync(Garden garden, Plant plant, CancellationToken cancellationToken = default)
     {
-        await dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        await dbContext.SaveChangesAsync(cancellationToken);
 
         var entity = await dbContext.Gardens
-            .FirstOrDefaultAsync(x => x.Id == garden.Id.Value, cancellationToken)
-            .ConfigureAwait(false);
+            .FirstOrDefaultAsync(x => x.Id == garden.Id.Value, cancellationToken);
 
         if (entity is null)
         {
@@ -73,8 +69,7 @@ public sealed class GardenRepository(ManagementDbContext dbContext) : IGardenRep
     {
         var entity = await dbContext.Gardens
             .Include(g => g.Plants)
-            .FirstOrDefaultAsync(x => x.Id == garden.Id.Value, cancellationToken)
-            .ConfigureAwait(false);
+            .FirstOrDefaultAsync(x => x.Id == garden.Id.Value, cancellationToken);
 
         if (entity is null)
         {

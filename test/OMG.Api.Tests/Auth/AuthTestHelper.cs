@@ -24,7 +24,7 @@ internal static class AuthTestHelper
         using var scope = factory.Services.CreateScope();
         var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
 
-        var user = await userManager.FindByEmailAsync(email).ConfigureAwait(false);
+        var user = await userManager.FindByEmailAsync(email);
         if (user is null)
         {
             user = new ApplicationUser
@@ -34,7 +34,7 @@ internal static class AuthTestHelper
                 EmailConfirmed = true
             };
 
-            var result = await userManager.CreateAsync(user, DefaultPassword).ConfigureAwait(false);
+            var result = await userManager.CreateAsync(user, DefaultPassword);
             if (!result.Succeeded)
             {
                 var errorDescriptions = string.Join(", ", result.Errors.Select(e => e.Description));
@@ -44,15 +44,15 @@ internal static class AuthTestHelper
         else if (!user.EmailConfirmed)
         {
             user.EmailConfirmed = true;
-            await userManager.UpdateAsync(user).ConfigureAwait(false);
+            await userManager.UpdateAsync(user);
         }
 
         var loginRequest = new LoginRequest(email, DefaultPassword);
 
-        var response = await client.PostAsJsonAsync("/api/v1/auth/login", loginRequest).ConfigureAwait(false);
+        var response = await client.PostAsJsonAsync("/api/v1/auth/login", loginRequest);
         response.EnsureSuccessStatusCode();
 
-        var authResponse = await response.Content.ReadFromJsonAsync<AuthResponse>().ConfigureAwait(false)
+        var authResponse = await response.Content.ReadFromJsonAsync<AuthResponse>()
                            ?? throw new InvalidOperationException("Authentication response was empty.");
 
         client.DefaultRequestHeaders.Authorization =

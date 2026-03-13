@@ -7,8 +7,7 @@ public sealed class WateringNeededConsumer(IIrrigationSystemAdapter irrigationSy
 {
     public async Task Consume(ConsumeContext<WateringNeeded> context)
     {
-        await irrigationSystemAdapter.OpenWaterValveAsync(context.Message.MeterId, context.CancellationToken)
-            .ConfigureAwait(false);
+        await irrigationSystemAdapter.OpenWaterValveAsync(context.Message.MeterId, context.CancellationToken);
     }
 }
 
@@ -16,8 +15,7 @@ public sealed class HydrationSatisfiedConsumer(IIrrigationSystemAdapter irrigati
 {
     public async Task Consume(ConsumeContext<HydrationSatisfied> context)
     {
-        await irrigationSystemAdapter.CloseWaterValveAsync(context.Message.MeterId, context.CancellationToken)
-            .ConfigureAwait(false);
+        await irrigationSystemAdapter.CloseWaterValveAsync(context.Message.MeterId, context.CancellationToken);
     }
 }
 
